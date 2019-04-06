@@ -2,6 +2,9 @@
 
 import socket
 
+from .header_parser import *
+from .packet_type_handler import *
+
 default_server_ip = '127.0.0.1'
 default_server_port = 8080
 
@@ -12,32 +15,21 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
     while True:
         message_bytes, address_from = s.recvfrom(10240)
 
-        message_str = message_bytes.decode('utf-8')
+        header = message_bytes[0:20]
+        message_payload = message_bytes[20:]
 
-        message_params = message_str.split('|')
-        message_text = message_params[0]
-
-        print("Message recieved:", message_text)
-
-        message_destination = '127.0.0.1:8080'
+        parser = Header_Parser()
 
         try:
-            message_destination = message_params[1]
-
-            print('Message destination:', message_destination)
-
+            parser.parse_header(header)
+            
+            handle_packet_type(parser.packet_type)
         except:
-            print('Message destination is invalid')
+            print('Invalid header')
+            # and do something
 
-        try:
-            destination_params = message_destination.split(':')
 
-            destination_ip = destination_params[0]
-            destination_port = destination_params[1]
 
-            if (destination_ip == default_server_ip and destination_port == default_server_port):
-                print('Message for this server')
-            else:
-                s.sendto(bytes(message_text, 'utf-8'), (destination_ip, int(destination_port)))
-        except:
-            print('Couldn\'t parse destination params')
+
+#s.sendto(bytes(message_text, 'utf-8'), (destination_ip, int(destination_port)))
+#message_str = message_bytes.decode('utf-8')
