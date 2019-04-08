@@ -1,9 +1,11 @@
 #! /usr/bin/python3
 
 import socket
+import sys
+sys.path.append("./") 
 
-from .header_parser import *
-from .packet_type_handler import *
+from header_parser import Header_Parser
+from packet_type_handler import *
 
 default_server_ip = '127.0.0.1'
 default_server_port = 8080
