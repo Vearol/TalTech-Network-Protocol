@@ -2,13 +2,16 @@
 
 class Header_Parser:
     def get_bits_value(self, number, bits):
+        
         value = 0
         for i in range(bits):
             value |= number & (1 << i)
 
         return value
 
+
     def bytes_to_int(self, byte_array):
+        
         value = 0
         size = len(byte_array)
         for i in range(size):
@@ -17,16 +20,24 @@ class Header_Parser:
                 value |= (byte & (1 << j)) << (i * 8)
         return value
 
+
     def parse_flag(self, header_bytes, bits):
+        
         self.flag = self.get_bits_value(header_bytes, bits)
 
+
     def parse_packet_type(self, header_bytes, bits):
+        
         self.packet_type = self.get_bits_value(header_bytes, bits)
 
+
     def parse_protocol_version(self, header_bytes, bits):
+        
         self.protocol_version = self.get_bits_value(header_bytes, bits)
 
+
     def parse_header(self, header_bytes):
+        
         # byte 0        -- protocol version,packet type, flags
         byte0 = header_bytes[0]
 
