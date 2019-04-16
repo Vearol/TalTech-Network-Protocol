@@ -45,11 +45,11 @@ class Header_Parser:
         packet_type_bits = 3
         protocol_version_bits = 2
 
-        self.parse_flag(byte0, flag_bits)
-        byte0 = byte0 >> flag_bits
+        self.parse_protocol_version(byte0, protocol_version_bits)
+        byte0 = byte0 >> protocol_version_bits
         self.parse_packet_type(byte0, packet_type_bits)
         byte0 = byte0 >> packet_type_bits
-        self.parse_protocol_version(byte0, protocol_version_bits)
+        self.parse_flag(byte0, flag_bits)
 
         # byte 1..8     -- SRC ID
         byte1_8 = header_bytes[1:9]
