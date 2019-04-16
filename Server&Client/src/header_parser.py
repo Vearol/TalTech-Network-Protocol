@@ -10,7 +10,7 @@ class Header_Parser:
         return value
 
 
-    def bytes_to_int(self, byte_array):
+    def bytes_to_number(self, byte_array):
         
         value = 0
         size = len(byte_array)
@@ -53,11 +53,11 @@ class Header_Parser:
 
         # byte 1..8     -- SRC ID
         byte1_8 = header_bytes[1:9]
-        self.source = self.bytes_to_int(byte1_8)
+        self.source = self.bytes_to_number(byte1_8)
 
         # byte 9..16    -- DST ID
         byte9_16 = header_bytes[9:17]
-        self.destination = self.bytes_to_int(byte9_16)
+        self.destination = self.bytes_to_number(byte9_16)
 
         # byte 17       -- sessionID, identify flow between endpoints
         byte17 = header_bytes[17]
@@ -65,4 +65,4 @@ class Header_Parser:
 
         # byte 18..19   -- sequence number
         byte18_19 = header_bytes[18:20]
-        self.sequence_number = self.bytes_to_int(byte18_19)
+        self.sequence_number = self.bytes_to_number(byte18_19)
