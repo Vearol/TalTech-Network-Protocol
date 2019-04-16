@@ -5,7 +5,7 @@ packet_types = {
     'route_update' : 1,
     'full_table_request' : 2,
     'full_table_update' : 3,
-    'send-request_identity' : 4,
+    'send_request_identity' : 4,
     'screen_message' : 6,
     'metadata_message' : 7
 }
