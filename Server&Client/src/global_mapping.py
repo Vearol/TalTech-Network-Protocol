@@ -1,5 +1,8 @@
 #! /usr/bin/python3
 
+SERVER_KEY = '...'
+PROTOCOL_VERSION = 0
+
 packet_types = {
     'keepalive' : 0,
     'route_update' : 1,
