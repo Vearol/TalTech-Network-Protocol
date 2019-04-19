@@ -44,12 +44,12 @@ def ACK(user_messages, user_id, sequance_number):
 
 
 def NOT_ACK():
-
+    pass
     # Send ACK
 
 
 def error():
-    
+    pass
     # do something
 
 
