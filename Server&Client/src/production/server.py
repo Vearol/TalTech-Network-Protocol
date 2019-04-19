@@ -19,6 +19,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
     sock.bind(('127.0.0.1', DEFAULT_SERVER_PORT))
     print('Listening socket: 127.0.0.1:', DEFAULT_SERVER_PORT)
 
+    parser = Header_Parser()
+
     while True:
         # Receive bytes. 100 bytes in theory, can decrease later
         message_bytes, address_from = sock.recvfrom(2048)
@@ -29,7 +31,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
 
         # Header takes first 20 bytes. Try to parse
         header = message_bytes[0:20]
-        parser = Header_Parser()
 
         try:
             parser.parse_header(header)
