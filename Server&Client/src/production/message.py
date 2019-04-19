@@ -4,7 +4,7 @@ import time
 from global_mapping import *
 from packet import create_packet
 
-class UserMeesageACK:
+class UserMessageACK:
     def __init__(self):
         self.user_messages = {}
     
