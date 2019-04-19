@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 
 from header_parser import Header_Parser
-from packet_type_handler import handle_packet
+from packet_handler import handle_packet
 from flag_handler import handle_flag
 from forward import forward_message
 from sessions import UserSessions
