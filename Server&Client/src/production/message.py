@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 
 import time
-from global_mapping import *
+from global_mapping import flag_types
 from packet import create_packet
 
 class UserMeesageACK:

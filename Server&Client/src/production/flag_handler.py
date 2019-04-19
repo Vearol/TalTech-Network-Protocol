@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 
-from global_mapping import *
+from global_mapping import packet_types, flag_types
 from packet import create_packet
 
 def normal(sessions, user_id, payload):
