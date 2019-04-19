@@ -3,22 +3,22 @@
 from global_mapping import *
 from packet import create_packet
 
-def normal(user_sessions, user_id, payload):
+def normal(sessions, user_id, payload):
     
-    user_sessions.add(user_id, payload)
+    sessions.add(user_id, payload)
 
 
-def first_packet(user_sessions, user_id, payload):
+def first_packet(sessions, user_id, payload):
    
-    user_sessions.add(user_id, payload)
+    sessions.add(user_id, payload)
 
 
-def last_packet(sock, user_sessions, user_id, payload):
+def last_packet(sock, sessions, user_id, payload):
     
-    user_sessions.add(user_id, payload)
+    sessions.add(user_id, payload)
 
     # TODO craft file, or whatever comes
-    print(user_sessions.user_data[user_id])
+    print(sessions.user_data[user_id])
 
     print("Single packet, sending ACK...")
     # TODO sequance_number
@@ -53,24 +53,24 @@ def error():
     # do something
 
 
-def handle_flag(sock, user_sessions, user_messages, header, payload):
+def handle_flag(sock, sessions, user_messages, header, payload):
     
     flag = header.flag
 
     if flag == flag_types['normal']:
-        normal(user_sessions, header.source, payload)
+        normal(sessions, header.source, payload)
         return
 
     if flag == flag_types['first_packet']:
-        first_packet(user_sessions, header.source, payload)
+        first_packet(sessions, header.source, payload)
         return
 
     if flag == flag_types['last_packet']:
-        last_packet(sock, user_sessions, header.source, payload)
+        last_packet(sock, sessions, header.source, payload)
         return
 
     if flag == flag_types['single_packet']:
-        single_packet(sock, user_sessions, header.source, payload)
+        single_packet(sock, sessions, header.source, payload)
         return
 
     if flag == flag_types['ACK']:

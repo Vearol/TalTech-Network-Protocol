@@ -9,7 +9,7 @@ from packet_type_handler import handle_packet
 from flag_handler import handle_flag
 from forward import forward_message
 from sessions import UserSessions
-from message import UserMeesageACK
+from message import *
 
 default_server_ip = '127.0.0.1'
 default_server_port = 8080
@@ -46,10 +46,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         # Payload - next 80 bytes(rest of bytes)
         payload = message_bytes[20:]
 
-        user_sessions = UserSessions()
-        user_messages = UserMeesageACK()
+        sessions = UserSessions()
+        messages_ack = UserMeesageACK()
 
-        handle_flag(sock user_sessions, user_messages, parser, payload)
+        handle_flag(sock sessions, messages_ack, parser, payload)
         handle_packet(sock, parser, payload)
         
 

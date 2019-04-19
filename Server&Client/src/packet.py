@@ -52,11 +52,11 @@ def create_header(protocol_version, packet_type, flag, source, destination, sess
     return header
 
 
-def create_packet(protocol_version, packet_type, flags, source, destination, sessionId, sequence_number, payload):
+def create_packet(protocol_version, packet_type, flag, source, destination, sessionId, sequence_number, payload):
     
     packet = bytearray(21)
 
-    packet[0:20] = create_header(protocol_version, packet_type, flags, source, destination, sessionId, sequence_number)
+    packet[0:20] = create_header(protocol_version, packet_type, flag, source, destination, sessionId, sequence_number)
     packet[20:] = payload
 
     return packet
