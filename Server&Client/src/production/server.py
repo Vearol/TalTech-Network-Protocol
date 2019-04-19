@@ -11,13 +11,13 @@ import sys
 sys.path.append("./")
 
 
-default_server_ip = '127.0.0.1'
-default_server_port = 8080
-default_server_gpg = 9223372036854775807
+DEFAULT_SERVER_IP = '127.0.0.1'
+DEFAULT_SERVER_PORT = 8080
+DEFAULT_SERVER_GPG = 9223372036854775807
 
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-    sock.bind(('127.0.0.1', default_server_port))
-    print('Listening socket: 127.0.0.1:', default_server_port)
+    sock.bind(('127.0.0.1', DEFAULT_SERVER_PORT))
+    print('Listening socket: 127.0.0.1:', DEFAULT_SERVER_PORT)
 
     while True:
         # Receive bytes. 100 bytes in theory, can decrease later
@@ -39,7 +39,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
             continue
 
         # Forward message
-        if (parser.destination != default_server_gpg):
+        if (parser.destination != DEFAULT_SERVER_GPG):
             forward_message(sock, message_bytes, parser.destination)
             continue
 
