@@ -34,7 +34,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         try:
             parser.parse_header(header)
 
-        except ValueError:  # temporary set valuerror
+        except IndexError:
             print('Couldn\'t parse header, skip packet')
             continue
 
