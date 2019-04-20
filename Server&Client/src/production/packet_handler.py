@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 
-from global_mapping import *
+from global_mapping import packet_types
 
 def keep_alive(payload):
     
