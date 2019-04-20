@@ -7,9 +7,6 @@ sys.path.append(os.pardir)
 from nodes import Nodes
 
 
-NEIGHBORS = {'sample_gpg_id_1': '192.168.11.1',
-             'sample_gpg_id_2': '192.168.11.2'}
-
 FULL_TABLE = {
     "A": ["B", "C"],
     "B": ["A", "D", "E"],
