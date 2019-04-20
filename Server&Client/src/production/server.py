@@ -7,8 +7,6 @@ from forward import forward_message
 from sessions import UserSessions
 from message import UserMessageACK
 import socket
-import sys
-sys.path.append("./")
 
 
 DEFAULT_SERVER_IP = '127.0.0.1'
