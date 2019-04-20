@@ -43,7 +43,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
 
         # Forward message
         if (parser.destination != DEFAULT_SERVER_GPG):
-            Transmission.forward(sock, message_bytes, parser.destination)
+            Transmission.forward_packet(sock, message_bytes, parser.destination)
             continue
 
         # Payload - next 80 bytes(rest of bytes)
@@ -51,6 +51,3 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
 
         handle_flag(sock, sessions, messages_ack, parser, payload)
         handle_packet(sock, parser, payload)
-
-# s.sendto(bytes(message_text, 'utf-8'),
-# (destination_ip, int(destination_port)))

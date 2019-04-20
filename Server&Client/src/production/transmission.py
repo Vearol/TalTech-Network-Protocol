@@ -16,6 +16,6 @@ class Transmission:
         # sock.sendto()
 
     @staticmethod
-    def forward(sock, message, dest_ip, dest_port):
+    def forward_packet(sock, message, dest_ip, dest_port):
         print("Forwarding massage to {}:{}".format(dest_ip, dest_port))
         sock.sendto(message, (dest_ip, dest_port))
