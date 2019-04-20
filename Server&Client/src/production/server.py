@@ -20,6 +20,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
     print('Listening socket: 127.0.0.1:', DEFAULT_SERVER_PORT)
 
     parser = Header_Parser()
+    sessions = UserSessions()
+    messages_ack = UserMessageACK()
 
     while True:
         # Receive bytes. 100 bytes in theory, can decrease later
@@ -47,12 +49,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         # Payload - next 80 bytes(rest of bytes)
         payload = message_bytes[20:]
 
-        sessions = UserSessions()
-        messages_ack = UserMessageACK()
-
         handle_flag(sock, sessions, messages_ack, parser, payload)
         handle_packet(sock, parser, payload)
-
 
 # s.sendto(bytes(message_text, 'utf-8'),
 # (destination_ip, int(destination_port)))
