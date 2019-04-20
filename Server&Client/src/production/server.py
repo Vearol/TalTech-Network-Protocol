@@ -3,7 +3,7 @@
 from header_parser import Header_Parser
 from packet_handler import handle_packet
 from flag_handler import handle_flag
-from forward import forward_message
+from transmission import Transmission
 from sessions import UserSessions
 from message import UserMessageACK
 import socket
@@ -43,7 +43,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
 
         # Forward message
         if (parser.destination != DEFAULT_SERVER_GPG):
-            forward_message(sock, message_bytes, parser.destination)
+            Transmission.forward(sock, message_bytes, parser.destination)
             continue
 
         # Payload - next 80 bytes(rest of bytes)
