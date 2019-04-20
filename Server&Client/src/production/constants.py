@@ -1,0 +1,35 @@
+#! /usr/bin/python3
+
+
+PROTOCOL_VERSION = '0'
+
+CONFIG = {
+
+    'server_key': '',
+
+    'server_ip': '127.0.0.1',
+    'server_port': 8080,
+    'server_gpg': 9223372036854775807,
+
+    'transmission_port': 1234
+}
+
+PACKET_TYPE = {
+    'keepalive': 0,
+    'route_update': 1,
+    'full_table_request': 2,
+    'full_table_update': 3,
+    'send_request_identity': 4,
+    'screen_message': 6,
+    'metadata_message': 7
+}
+
+FLAG_TYPE = {
+    'normal': 0,
+    'first_packet': 1,
+    'last_packet': 2,
+    'single_packet': 3,
+    'ACK': 4,
+    'NOT_ACK': 6,
+    'error': 7
+}

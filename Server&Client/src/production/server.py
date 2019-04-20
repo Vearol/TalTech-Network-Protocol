@@ -6,18 +6,15 @@ from flag_handler import handle_flag
 from transmission import Transmission
 from sessions import UserSessions
 from message import UserMessageACK
+import constants as c
 import socket
 import sys
 sys.path.append("./")
 
 
-DEFAULT_SERVER_IP = '127.0.0.1'
-DEFAULT_SERVER_PORT = 8080
-DEFAULT_SERVER_GPG = 9223372036854775807
-
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-    sock.bind(('127.0.0.1', DEFAULT_SERVER_PORT))
-    print('Listening socket: 127.0.0.1:', DEFAULT_SERVER_PORT)
+    sock.bind(('127.0.0.1', c.CONFIG['server_port']))
+    print('Listening socket: 127.0.0.1:', c.CONFIG['server_port'])
 
     parser = Header_Parser()
     sessions = UserSessions()
@@ -42,7 +39,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
             continue
 
         # Forward message
-        if (parser.destination != DEFAULT_SERVER_GPG):
+        if (parser.destination != c.CONFIG['server_gpg']):
             Transmission.forward_packet(sock, message_bytes, parser.destination)
             continue
 

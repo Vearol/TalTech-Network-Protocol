@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 
 import time
-from global_mapping import flag_types
+import constants as c
 from packet import create_packet
 
 class UserMessageACK:
@@ -40,20 +40,20 @@ def send_message(sock, sessions, sequances, packet_type, flag, destination, payl
 
     session_id = -1
 
-    if (flag == flag_types['single_packet']):
+    if (flag == c.FLAG_TYPE['single_packet']):
         session_id = 0
 
-    if (flag == flag_types['normal'] or flag == flag_types['last_packet']):
+    if (flag == c.FLAG_TYPE['normal'] or flag == c.FLAG_TYPE['last_packet']):
         session_id = sessions.get_sessions(destination)
 
-    if (flag == flag_types['first_packet']):
+    if (flag == c.FLAG_TYPE['first_packet']):
         session_id = sessions.get_new_session(destination)
 
     sequances.add(destination, len(payload))
     sequance_number = sequances.get(destination)
 
 
-    packet = create_packet(PROTOCOL_VERSION, packet_type, flags, SERVER_KEY, destination, session_id, sequance_number, payload)
+    packet = create_packet(c.PROTOCOL_VERSION, packet_type, flags, c.SERVER_KEY, destination, session_id, sequance_number, payload)
 
     address = get_next_dest(destination)
 
