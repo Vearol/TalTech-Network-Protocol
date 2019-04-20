@@ -22,20 +22,9 @@ node_data = Nodes()
 node_data.update_route_table(FULL_TABLE)
 
 
-def test_get_full_table(node_data):
-    node_data.update_route_table(FULL_TABLE)
-    assert FULL_TABLE == node_data.get_full_table()
-
-
 def test_get_paths_num(node_data):
     node_data.update_route_table(FULL_TABLE)
     assert 5 == node_data.get_paths_num()
-
-
-def test_update_route_table(node_data):
-    node_data.update_route_table(FULL_TABLE)
-    node_data.update_route_table(UPDATE_TABLE)
-    assert node_data.full_table == UPDATE_TABLE
 
 
 def test_get_shortest_path():
@@ -43,6 +32,4 @@ def test_get_shortest_path():
     pass
 
 
-test_get_full_table(node_data)
 test_get_paths_num(node_data)
-test_update_route_table(node_data)
