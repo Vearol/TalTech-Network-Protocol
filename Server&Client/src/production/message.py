@@ -64,7 +64,7 @@ def send_message(sock, sessions, sequances, messages_ack, packet_type, destinati
         sequances.add(destination, size)
         sequance_number = sequances.get(destination)
 
-        packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequance_number, payload[range_from:range_to])
+        packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequance_number, payload)
 
         sock.sendto(packet, (address.ip, address.port))
 
