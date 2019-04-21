@@ -10,6 +10,7 @@ class UserSessions:
         self.user_sessions = {}
     
 
+    # add file chunk to local storage, to create file later
     def add(self, user_id, payload):
         
         if (user_id in self.user_data.keys()):
@@ -18,12 +19,14 @@ class UserSessions:
             self.user_data[user_id] = [payload]
     
 
+    # free the local storage. TODO keep file reference for history
     def remove(self, user_id):
         
         if (user_id in self.user_data.keys()):  
             self.user_data.pop(user_id)
 
 
+    # generate new autoincrement session id
     def get_new_session(self, user_id):
 
         if (user_id in self.user_sessions.keys()):
@@ -34,6 +37,7 @@ class UserSessions:
         return self.user_sessions[user_id]
     
 
+    # return current session value for a user
     def get_session(self, user_id):
 
         if (user_id in self.user_sessions.keys()):
@@ -42,3 +46,10 @@ class UserSessions:
             self.user_sessions[user_id] = 1
         
         return 1
+
+    
+    # get binary data of last session
+    def get_data(self, user_id):
+        
+        if (user_id in self.user_data.keys()):  
+            return self.user_data[user_id]

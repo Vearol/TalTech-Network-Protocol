@@ -1,23 +1,31 @@
 #! /usr/bin/python3
 
+import socket
+
 from header_parser import Header_Parser
 from packet_handler import handle_packet
 from flag_handler import handle_flag
 from forward import forward_message
 from sessions import UserSessions
-from message import UserMessageACK
-import socket
+from message import UserMessageACK, UserMessageSN
+from nodes import Nodes
 
 
 DEFAULT_SERVER_IP = '127.0.0.1'
 DEFAULT_SERVER_PORT = 8080
 DEFAULT_SERVER_GPG = 9223372036854775807
 
+
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
     sock.bind(('127.0.0.1', DEFAULT_SERVER_PORT))
     print('Listening socket: 127.0.0.1:', DEFAULT_SERVER_PORT)
 
     parser = Header_Parser()
+    sessions = UserSessions()
+    messages_ack = UserMessageACK()
+    sequances = UserMessageSN()
+    nodes = Nodes()
+
 
     while True:
         # Receive bytes. 100 bytes in theory, can decrease later
@@ -43,14 +51,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
             continue
 
         # Payload - next 80 bytes(rest of bytes)
-        payload = message_bytes[20:]
-
-        sessions = UserSessions()
-        messages_ack = UserMessageACK()
+        payload = message_bytes[20:]        
 
         handle_flag(sock, sessions, messages_ack, parser, payload)
-        handle_packet(sock, parser, payload)
-
-
-# s.sendto(bytes(message_text, 'utf-8'),
-# (destination_ip, int(destination_port)))
+        handle_packet(sock, nodes, sessions, sequances, messages_ack, parser, payload)
