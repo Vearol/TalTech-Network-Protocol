@@ -3,6 +3,8 @@
 SERVER_KEY = '...'
 PROTOCOL_VERSION = 0
 
+PAYLOAD_BUFFER = 80
+
 packet_types = {
     'keepalive' : 0,
     'route_update' : 1,
