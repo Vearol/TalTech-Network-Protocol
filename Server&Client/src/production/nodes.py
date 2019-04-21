@@ -27,17 +27,6 @@ class Nodes:
                 paths.add(kv[0] + kv[1])
         return list(paths)
 
-    def get_paths_num(self):
-        paths = set()
-        for k in self.full_table.keys():
-            for v in self.full_table[k]:
-                if k == v:
-                    continue
-                kv = [k, v]
-                kv.sort()
-                paths.add(kv[0] + kv[1])
-        return len(paths)
-
     def add_neighbor(self, node_id, address):
         if node_id not in self.neighbors.keys():
             self.neighbors[node_id] = address
@@ -56,21 +45,21 @@ class Nodes:
         self.neighbors = {}
         self.node_map = {}
 
-    def get_shortest_path_data(self, base, target):
+    def get_BF_update_history(self, base, target):
         update_history = []
         dist = {}
-        graph = []
+        path_list_separated = []
         nodes_num = self.get_node_num()
         path_list = self.get_paths_conbination()
         for points in path_list:
-            graph.append([points[0], points[1]])
+            path_list_separated.append([points[0], points[1]])
         for key in self.full_table.keys():
             if key == base:
                 dist[key] = 0
             else:
                 dist[key] = float("Inf")
         for x in range(nodes_num - 1):
-            for u, v in graph:
+            for u, v in path_list_separated:
                 if dist[u] != float("Inf") and dist[u] + 1 < dist[v]:
                     update_history.append([v, u])
                     dist[v] = dist[u] + 1
