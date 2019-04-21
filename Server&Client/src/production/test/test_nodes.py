@@ -19,15 +19,10 @@ UPDATE_TABLE = {
     "B": ["A", "E"]}
 
 
-
 node_data = Nodes()
 node_data.update_route_table(FULL_TABLE)
 node_data.add_neighbor("B", "xxx.xxx.xxx.xxx")
 node_data.add_neighbor("C", "yyy.yyy.yyy.yyy")
-
-
-def test_get_paths_num(node_data):
-    assert 5 == node_data.get_paths_num()
 
 
 def test_get_shortest_neighbor(node_data, base, target):
@@ -36,6 +31,4 @@ def test_get_shortest_neighbor(node_data, base, target):
     assert "B" == test
 
 
-test_get_paths_num(node_data)
-# test_get_shortest_neighbor(node_data, "A", "F")
 test_get_shortest_neighbor(node_data, "A", "E")
