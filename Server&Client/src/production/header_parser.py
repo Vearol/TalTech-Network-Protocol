@@ -15,7 +15,7 @@ class Header_Parser:
         value = 0
         size = len(byte_array)
         for i in range(size):
-            byte = byte_array[i]
+            byte = byte_array[size - 1 - i]
             for j in range(8):
                 value |= (byte & (1 << j)) << (i * 8)
         return value

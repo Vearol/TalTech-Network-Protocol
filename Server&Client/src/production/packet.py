@@ -16,7 +16,7 @@ def number_to_bytes(value, size):
     byte_arr = bytearray(size)
     for i in range(size):
         for j in range(8):
-            byte_arr[i] |= value & (1 << j)
+            byte_arr[size - 1 - i] |= value & (1 << j)
         
         value = value >> 8
     
