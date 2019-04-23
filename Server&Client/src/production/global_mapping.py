@@ -5,6 +5,17 @@ PROTOCOL_VERSION = 0
 
 PAYLOAD_BUFFER = 80
 
+# maximum sequence number 
+MAX_SN = 65535
+MAX_SESSION = 255
+
+# metadata constants
+METADATA_HEADER = 2
+FILENAME_KEY = 'name'
+FILESIZE_KEY = 'length'
+FILETYPE_KEY = 'content-type'
+
+# packet constants
 packet_types = {
     'keepalive' : 0,
     'route_update' : 1,
