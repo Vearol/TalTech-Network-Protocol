@@ -1,7 +1,9 @@
 #! /usr/bin/python3
 
-from global_mapping import packet_types, flag_types
+from global_mapping import packet_types, flag_types, FILENAME_KEY, FILETYPE_KEY, FILESIZE_KEY
 from message import send_message
+from byte_parser import bytes_to_number
+from files import parse_file_metadata
 
 
 def is_fully_received(flag):
@@ -99,8 +101,23 @@ def metadata_message(header, sessions, payload):
         payload_data = sessions.get_data(source)
 
     print('message with binary metadata from', header.source)
-    # TODO file name???
+    
+    metadata = parse_file_metadata(payload_data)
+
     file_name = 'file_name'
+    file_type = ''
+    file_size = 0
+
+    keys = metadata.keys()
+    if (FILENAME_KEY in keys):
+        file_name = metadata[FILENAME_KEY]
+    if (FILETYPE_KEY in keys):
+        file_type = metadata[FILETYPE_KEY]
+    if (FILESIZE_KEY in keys):
+        file_size = metadata[FILESIZE_KEY]
+
+    print('Saving file:', file_name, file_type, file_size, 'bytes')
+
     file_to_save = open(file_name, 'wb')
     
     for data in payload_data:

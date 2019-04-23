@@ -1,10 +1,11 @@
 #! /usr/bin/python3
 
 import time
-import os
 
 from global_mapping import *
 from packet import create_packet
+from files import generate_file_metadata
+from byte_parser import number_to_bytes
 
 
 class UserMessageACK:
@@ -40,8 +41,8 @@ class UserMessageSN:
         else:
             self.message_sn[user_id] = sequance_number
 
-        if (self.message_sn[user_id] > 65536):
-                self.message_sn[user_id] -= 65536
+        if (self.message_sn[user_id] > MAX_SN):
+                self.message_sn[user_id] -= MAX_SN
 
     def get(self, user_id):
 
@@ -106,13 +107,20 @@ def send_file(sock, sessions, sequances, messages_ack, packet_type, destination,
 
     session_id = get_new_session(destination)
 
-    size = os.path.getsize(file_path)
+    metadata, file_size = generate_file_metadata(file_path)
 
     file_to_send = open(file_path, "r")
-    data = file_to_send.read(PAYLOAD_BUFFER)
+
+    metadata_length = len(metadata)
+    metadata_header = number_to_bytes(metadata_length, METADATA_HEADER)
+
+    # possible negative value
+    data = metadata_header + metadata + file_to_send.read(PAYLOAD_BUFFER - METADATA_HEADER - metadata_length)
+
+    size = file_size + metadata_length + METADATA_HEADER
     
     flag = flag_types['single_packet']
-    if (os.path.getsize(file_path) > PAYLOAD_BUFFER):
+    if (size > PAYLOAD_BUFFER):
         flag = flag_types['first_packet']
 
     while (data):
@@ -128,9 +136,8 @@ def send_file(sock, sessions, sequances, messages_ack, packet_type, destination,
 
         packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequance_number, data)
         
-        print('Sending massage to', address.nickname)
         if ( sock.sendto(packet, (address.ip, address.port)) ):
-            data = file_to_send.read(PAYLOAD_BUFFER)
+            data = number_to_bytes(0, METADATA_HEADER) + file_to_send.read(PAYLOAD_BUFFER - metadata_header_length)
 
         messages_ack.add(destination, sequance_number)
         

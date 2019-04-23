@@ -1,5 +1,7 @@
 #! /usr/bin/python3
 
+from global_mapping import MAX_SESSION
+
 class UserSessions:
     
     def __init__(self):
@@ -30,7 +32,11 @@ class UserSessions:
     def get_new_session(self, user_id):
 
         if (user_id in self.user_sessions.keys()):
-            self.user_sessions[user_id] += 1
+            next_session = self.user_sessions[user_id] + 1
+            if (next_session > MAX_SESSION):
+                next_session -= MAX_SESSION
+            
+            self.user_sessions[user_id] = next_session
         else:
             self.user_sessions[user_id] = 1
         

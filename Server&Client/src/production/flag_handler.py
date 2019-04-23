@@ -1,22 +1,35 @@
 #! /usr/bin/python3
 
-from global_mapping import packet_types, flag_types
+from global_mapping import packet_types, flag_types, METADATA_HEADER
 from packet import create_packet
 from message import send_ACK
+from byte_parser import bytes_to_number
 
-def normal(sessions, source, payload):
+
+def skip_index(payload, packet_type):
     
-    sessions.add(source, payload)
+    if (packet_type == packet_types['metadata_message']):
+        return METADATA_HEADER + bytes_to_number(payload[0 : METADATA_HEADER])
+    
+    return 0
 
 
-def first_packet(sessions, source, payload):
+def normal(sessions, source, packet_type, payload):
+    
+    skip = skip_index(payload, packet_type)
+    sessions.add(source, payload[skip:])
+
+
+def first_packet(sessions, source, packet_type, payload):
    
-    sessions.add(source, payload)
+    skip = skip_index(payload, packet_type)
+    sessions.add(source, payload[skip:])
 
 
-def last_packet(sock, sessions, source, sequance_number, payload):
+def last_packet(sock, sessions, source, packet_type, sequance_number, payload):
     
-    sessions.add(source, payload)
+    skip = skip_index(payload, packet_type)
+    sessions.add(source, payload[skip:])
 
     send_ACK(sock, source, sequence_number)
 
@@ -24,7 +37,7 @@ def last_packet(sock, sessions, source, sequance_number, payload):
 def single_packet(sock, source, sequence_number, payload):
    
     print("Single packet, sending ACK...")
-    # TODO sequance_number
+    # TODO sequance_number check
 
     send_ACK(sock, source, sequence_number)
 
@@ -50,15 +63,15 @@ def handle_flag(sock, sessions, user_messages, header, payload):
     flag = header.flag
 
     if flag == flag_types['normal']:
-        normal(sessions, header.source, payload)
+        normal(sessions, header.source, header.packet_type, payload)
         return
 
     if flag == flag_types['first_packet']:
-        first_packet(sessions, header.source, payload)
+        first_packet(sessions, header.source, header.packet_type, payload)
         return
 
     if flag == flag_types['last_packet']:
-        last_packet(sock, sessions, header.source, header.sequance_number, payload)
+        last_packet(sock, sessions, header.source, header.packet_type, header.sequance_number, payload)
         return
 
     if flag == flag_types['single_packet']:
