@@ -1,26 +1,6 @@
 #! /usr/bin/python3
 
-def set_bits(number, bit_from, bit_to, value):
-
-    k = 0
-    bit_to += 1
-    for i in range(bit_from, bit_to):
-        number |= (value & (1 << k)) << bit_from
-        k += 1
-    
-    return number
-
-
-def number_to_bytes(value, size):
-
-    byte_arr = bytearray(size)
-    for i in range(size):
-        for j in range(8):
-            byte_arr[size - 1 - i] |= value & (1 << j)
-        
-        value = value >> 8
-    
-    return byte_arr
+from byte_parser import set_bits, number_to_bytes
 
 
 def create_header(protocol_version, packet_type, flag, source, destination, sessionId, sequence_number):
