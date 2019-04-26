@@ -20,9 +20,10 @@ def normal(sessions, source, packet_type, payload):
     sessions.add(source, payload[skip:])
 
 
-def first_packet(sessions, source, payload):
-    print('first packet')
-    sessions.add(source, payload)
+def first_packet(sessions, source, packet_type, payload):
+   
+    skip = skip_index(payload, packet_type)
+    sessions.add(source, payload[skip:])
 
 
 def last_packet(sock, sessions, source, packet_type, sequence_number, payload):
@@ -66,7 +67,7 @@ def handle_flag(sock, sessions, user_messages, header, payload):
         return
 
     if flag == flag_types['first_packet']:
-        first_packet(sessions, header.source, payload)
+        first_packet(sessions, header.source, header.packet_type, payload)
         return
 
     if flag == flag_types['last_packet']:

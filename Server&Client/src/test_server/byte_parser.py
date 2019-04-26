@@ -24,7 +24,7 @@ def set_bits(number, bit_from, bit_to, value):
 
 # convert bytearray to number
 def bytes_to_number(byte_array):
-    
+        
     value = 0
     size = len(byte_array)
     for i in range(size):

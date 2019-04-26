@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 
-from global_mapping import packet_types, flag_types, FILENAME_KEY, FILESIZE_KEY
+from global_mapping import packet_types, flag_types, FILENAME_KEY, FILETYPE_KEY, FILESIZE_KEY
 from message import send_message
 from byte_parser import bytes_to_number
 from files import parse_file_metadata
@@ -48,6 +48,10 @@ def full_table_update(flag, nodes, sessions, payload):
     router_data = []
     payload_data = sessions.get_data(source)
 
+    for chunk in payload_data:
+        for b in chunk:
+            router_data.append(b)
+
     nodes.update_route_table(router_data)
 
 
@@ -85,24 +89,23 @@ def screen_message(socket, header, sessions, payload):
 
 
 def metadata_message(header, sessions, payload):
-
+    
     if (header.flag == flag_types['ACK']):
         return
 
+    source = header.source
+    
     # still incoming...
     if (not is_fully_received(header.flag)):
-        print('File incoming...')
         return
-
-    source = header.source
     
     payload_data = payload
     if (header.flag == flag_types['last_packet']):
         payload_data = sessions.get_data(source)
 
     print('message with binary metadata from', header.source)
-
-    metadata, skip = parse_file_metadata(payload_data)
+    
+    metadata = parse_file_metadata(payload_data)
 
     file_name = 'file_name'
     file_type = ''
@@ -111,19 +114,19 @@ def metadata_message(header, sessions, payload):
     keys = metadata.keys()
     if (FILENAME_KEY in keys):
         file_name = metadata[FILENAME_KEY]
+    if (FILETYPE_KEY in keys):
+        file_type = metadata[FILETYPE_KEY]
     if (FILESIZE_KEY in keys):
         file_size = metadata[FILESIZE_KEY]
 
-    print('Saving file:', file_name, file_size, 'bytes')
+    print('Saving file:', file_name, file_type, file_size, 'bytes')
 
     file_to_save = open(file_name, 'wb')
     
-    file_data = payload_data[skip:]
-    file_to_save.write(file_data)
+    for data in payload_data:
+        file_to_save.write(data)
 
     file_to_save.close()
-
-    sessions.remove(source)
 
 
 def handle_packet(socket, nodes, sessions, sequences, messages_ack, header, payload):

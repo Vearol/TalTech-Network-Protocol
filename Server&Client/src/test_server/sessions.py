@@ -16,12 +16,9 @@ class UserSessions:
     def add(self, user_id, payload):
         
         if (user_id in self.user_data.keys()):
-
-            data = self.user_data[user_id]
-            for byte in payload:
-                data.append(byte)
+            self.user_data[user_id].append(payload)
         else:
-            self.user_data[user_id] = bytearray(payload)
+            self.user_data[user_id] = [payload]
     
 
     # free the local storage. TODO keep file reference for history
