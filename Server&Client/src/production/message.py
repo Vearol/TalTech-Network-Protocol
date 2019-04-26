@@ -96,8 +96,6 @@ def send_message(sock, sessions, sequances, messages_ack, packet_type, destinati
 
     packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequance_number, payload[data_sent:])
 
-    address = get_next_dest(destination)
-
     sock.sendto(packet, (address.ip, address.port))
     messages_ack.add(destination, sequance_number)
 
@@ -105,6 +103,7 @@ def send_message(sock, sessions, sequances, messages_ack, packet_type, destinati
 # sending files
 def send_file(sock, sessions, sequances, messages_ack, packet_type, destination, file_path):
 
+    address = get_next_dest(destination)
     session_id = get_new_session(destination)
 
     metadata, file_size = generate_file_metadata(file_path)
@@ -124,8 +123,6 @@ def send_file(sock, sessions, sequances, messages_ack, packet_type, destination,
         flag = flag_types['first_packet']
 
     while (data):
-
-        address = get_next_dest(destination)
 
         sequances.add(destination, len(data))
         sequance_number = sequances.get(destination)
