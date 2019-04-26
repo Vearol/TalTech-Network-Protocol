@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 
-from global_mapping import packet_types, flag_types, FILENAME_KEY, FILETYPE_KEY, FILESIZE_KEY
+from global_mapping import packet_types, flag_types, FILENAME_KEY, FILESIZE_KEY
 from message import send_message
 from byte_parser import bytes_to_number
 from files import parse_file_metadata
@@ -25,13 +25,13 @@ def route_update(payload):
     # do something
 
 
-def full_table_request(sock, sessions, sequances, messages_ack, nodes, destination):
+def full_table_request(sock, sessions, sequences, messages_ack, nodes, destination):
     
     print('request full active routing table message')
     # TODO check data format
     payload = nodes.get_full_table()
 
-    send_message(sock, sessions, sequances, messages_ack, packet_types['full_table_update'], destination, payload)
+    send_message(sock, sessions, sequences, messages_ack, packet_types['full_table_update'], destination, payload)
 
 
 def full_table_update(flag, nodes, sessions, payload):
@@ -47,10 +47,6 @@ def full_table_update(flag, nodes, sessions, payload):
     
     router_data = []
     payload_data = sessions.get_data(source)
-
-    for chunk in payload_data:
-        for b in chunk:
-            router_data.append(b)
 
     nodes.update_route_table(router_data)
 
@@ -90,6 +86,10 @@ def screen_message(socket, header, sessions, payload):
 
 def metadata_message(header, sessions, payload):
     
+    # TODO check what packet type for metadata
+    if (header.flag == flag_types['ACK']):
+        return
+
     source = header.source
     
     # still incoming...
@@ -102,31 +102,30 @@ def metadata_message(header, sessions, payload):
 
     print('message with binary metadata from', header.source)
     
-    metadata = parse_file_metadata(payload_data)
+    metadata, skip = parse_file_metadata(payload_data)
 
     file_name = 'file_name'
-    file_type = ''
     file_size = 0
 
     keys = metadata.keys()
     if (FILENAME_KEY in keys):
         file_name = metadata[FILENAME_KEY]
-    if (FILETYPE_KEY in keys):
-        file_type = metadata[FILETYPE_KEY]
     if (FILESIZE_KEY in keys):
         file_size = metadata[FILESIZE_KEY]
 
-    print('Saving file:', file_name, file_type, file_size, 'bytes')
+    print('Saving file:', file_name, file_size, 'bytes')
 
     file_to_save = open(file_name, 'wb')
     
-    for data in payload_data:
-        file_to_save.write(data)
+    file_data = payload[skip:]
+    file_to_save.write(file_data)
 
     file_to_save.close()
 
+    sessions.remove(source)
 
-def handle_packet(socket, nodes, sessions, sequances, messages_ack, header, payload):
+
+def handle_packet(socket, nodes, sessions, sequences, messages_ack, header, payload):
     
     packet_type = header.packet_type
 
@@ -139,7 +138,7 @@ def handle_packet(socket, nodes, sessions, sequances, messages_ack, header, payl
         return
 
     if packet_type == packet_types['full_table_request']:
-        full_table_request(sock, sessions, sequances, messages_ack, nodes)
+        full_table_request(sock, sessions, sequences, messages_ack, nodes)
         return
 
     if packet_type == packet_types['full_table_update']:
@@ -155,6 +154,6 @@ def handle_packet(socket, nodes, sessions, sequances, messages_ack, header, payl
         return
 
     if packet_type == packet_types['metadata_message']:
-        metadata_message(header, sessions)
+        metadata_message(header, sessions, payload)
         return
 
