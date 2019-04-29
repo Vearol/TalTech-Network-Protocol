@@ -60,7 +60,7 @@ class Nodes:
                         full_table[dest_id] = cost
         return full_table
 
-    def get_nearest_node(self, dest_id):
+    def get_nearest_neighbor(self, dest_id):
         tables = self.tables
         key = ''
         min_cost = float('inf')

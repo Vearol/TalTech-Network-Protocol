@@ -65,7 +65,7 @@ class TestNodes(unittest.TestCase):
         actual = nodes.get_full_table_byte()
         self.assertEqual(EXPECTED, actual)
 
-    def test_get_nearest_node(self):
+    def test_get_nearest_neighbor(self):
         nodes = Nodes()
         TABLES = [{"BBBBBBBB": {"BBBBBBBB": 1,
                                 "CCCCCCCC": 4,
@@ -78,7 +78,7 @@ class TestNodes(unittest.TestCase):
         TARGET = "EEEEEEEE"
         nodes.tables.extend(TABLES)
         EXPECTED = "CCCCCCCC"
-        actual = nodes.get_nearest_node(TARGET)
+        actual = nodes.get_nearest_neighbor(TARGET)
         self.assertEqual(EXPECTED, actual)
 
 
