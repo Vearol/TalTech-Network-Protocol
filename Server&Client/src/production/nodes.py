@@ -3,75 +3,74 @@
 
 class Nodes:
 
-    def __init__(self):
-        self.neighbors = {}
-        self.full_table = {}
+    def __init__(self, host_id='nodeself'):
+        self.host_id = host_id
+        self.tables = [{host_id: {host_id: 0}}]
 
-    def get_neighbors(self):
-        return self.neighbors
+    def add_table_byte(self, table_byte, cost=0):
+        array = []
+        table = {}
+        table_key = ''
+        table_str = table_byte.decode()
+        for x in range(len(table_str) / 10):
+            array.append(table_str[:10])
+        for a in array:
+            key = a[:8]
+            value = int(a[9:])
+            table[key] = value + cost
+            if value == 0:
+                table_key = key
+        self.tables.append({table_key: table})
+
+    def get_table_byte(self):
+        ret = ''
+        tables = self.tables
+        for table in tables:
+            for routes in table.values():
+                for dest_id, cost in routes.items():
+                    cost_str = str(cost)
+                    ret += dest_id + cost_str.zfill(2)
+        return bytearray(ret)
+
+    def remove_table(self, src_id):
+        for idx, table in enumerate(self.tables):
+            if src_id in table.keys():
+                self.tables.pop(idx)
+
+    def get_full_table_byte(self):
+        ret = b""
+        full_table = self.get_full_table()
+        for key, value in sorted(full_table.items()):
+            str_value = str(value)
+            ret += bytes(key)
+            ret += bytes(str_value.zfill(2))
+        return ret
 
     def get_full_table(self):
-        return self.full_table
+        full_table = {}
+        tables = self.tables
+        for table in tables:
+            if self.host_id in table.keys():
+                continue
+            for src_id, routes in table.items():
+                for dest_id, cost in routes.items():
+                    if dest_id not in full_table.keys():
+                        full_table[dest_id] = cost
+                    elif full_table[dest_id] > cost:
+                        full_table[dest_id] = cost
+        return full_table
 
-    def get_node_num(self):
-        return len(self.full_table.keys())
+    def get_nearest_node(self, dest_id):
+        tables = self.tables
+        key = ''
+        min_cost = float('inf')
+        for table in tables:
+            for table_key, table_value in table.items():
+                for k, v in table_value.items():
+                    if k == dest_id and v < min_cost:
+                        min_cost = v
+                        key = table_key
+        return key
 
-    def get_paths_conbination(self):
-        paths = set()
-        for k in self.full_table.keys():
-            for v in self.full_table[k]:
-                if k == v:
-                    continue
-                kv = [k, v]
-                kv.sort()
-                paths.add(kv[0] + kv[1])
-        return list(paths)
-
-    def add_neighbor(self, node_id, address):
-        if node_id not in self.neighbors.keys():
-            self.neighbors[node_id] = address
-
-    def remove_neighbor(self, node_id):
-        self.neighbors.remove(node_id)
-        return
-
-    def update_route_table(self, table):
-        self.full_table = table
-
-    def remove_node(self, node_id):
-        self.full_table.remove(node_id)
-
-    def clear_nodes(self):
-        self.neighbors = {}
-        self.node_map = {}
-
-    def get_BF_update_history(self, base, target):
-        update_history = []
-        dist = {}
-        path_list_separated = []
-        nodes_num = self.get_node_num()
-        path_list = self.get_paths_conbination()
-        for points in path_list:
-            path_list_separated.append([points[0], points[1]])
-        for key in self.full_table.keys():
-            if key == base:
-                dist[key] = 0
-            else:
-                dist[key] = float("Inf")
-        for x in range(nodes_num - 1):
-            for u, v in path_list_separated:
-                if dist[u] != float("Inf") and dist[u] + 1 < dist[v]:
-                    update_history.append([v, u])
-                    dist[v] = dist[u] + 1
-        return update_history
-
-    def get_shortest_neighbor(self, target, history):
-        if target in self.neighbors.keys():
-            return target
-        ret = ""
-        for x in reversed(history):
-            if x[0] == target or ret:
-                ret = x[1]
-            if ret in self.neighbors.keys():
-                break
-        return ret
+    def clear_tables(self):
+        self.tables = []
