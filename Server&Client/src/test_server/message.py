@@ -68,7 +68,7 @@ def send_message(sock, sessions, sequences, messages_ack, packet_type, destinati
 
         packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload)
 
-        sock.sendto(packet, (address_ip, address_port))
+        sock.sendto(packet, (DEFAULT_DEST_IP, address_port))
 
         return
 

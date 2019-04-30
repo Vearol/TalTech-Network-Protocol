@@ -55,7 +55,7 @@ def send_message(sock, sessions, sequences, messages_ack, packet_type, destinati
     session_id = sessions.get_new_session(destination)
 
     size = len(payload)
-    address_ip = '127.0.0.1'
+    address_ip = '193.40.103.97'
     address_port = 8088
 
     flag = flag_types['single_packet']
@@ -68,7 +68,7 @@ def send_message(sock, sessions, sequences, messages_ack, packet_type, destinati
 
         packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload)
 
-        sock.sendto(packet, (address_ip, address_port))
+        sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
 
         return
 
@@ -83,7 +83,7 @@ def send_message(sock, sessions, sequences, messages_ack, packet_type, destinati
 
         packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload[range_from:range_to])
 
-        sock.sendto(packet, (address.ip, address.port))
+        sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
 
         flag = flag_types['normal']
         sequence_number.add(destination, PAYLOAD_BUFFER)
@@ -97,21 +97,21 @@ def send_message(sock, sessions, sequences, messages_ack, packet_type, destinati
 
     packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload[data_sent:])
 
-    sock.sendto(packet, (address_ip, address_port))
+    sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
     messages_ack.add(destination, sequence_number)
 
 
 # sending files
 def send_file(sock, sessions, sequences, messages_ack, packet_type, destination, file_path):
 
-    session_id = get_new_session(destination)
+    session_id = sessions.get_new_session(destination)
 
     address_ip = '127.0.0.1'
     address_port = 8088
 
     metadata, file_size = generate_file_metadata(file_path)
 
-    file_to_send = open(file_path, "r")
+    file_to_send = open(file_path, "rb")
 
     metadata_length = len(metadata)
     metadata_header = number_to_bytes(metadata_length, METADATA_HEADER)
@@ -132,7 +132,7 @@ def send_file(sock, sessions, sequences, messages_ack, packet_type, destination,
 
         packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, data)
         
-        if ( sock.sendto(packet, (address_ip, address_port)) ):
+        if ( sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT)) ):
             data = number_to_bytes(0, METADATA_HEADER) + file_to_send.read(PAYLOAD_BUFFER - METADATA_HEADER)
             
             flag = flag_types['normal']
@@ -153,5 +153,5 @@ def send_ACK(sock, destination, sequence_number):
     address_ip = '127.0.0.1'
     address_port = 8088
 
-    sock.sendto(packet, (address_ip, address_port))
+    sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
 

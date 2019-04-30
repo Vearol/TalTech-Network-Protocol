@@ -13,7 +13,7 @@ from nodes import Nodes
 from global_mapping import packet_types, DEFAULT_DESTINATION, DEFAULT_SERVER_GPG
 
 
-DEFAULT_SERVER_IP = '127.0.0.1'
+DEFAULT_SERVER_IP = '0.0.0.0'
 DEFAULT_SERVER_PORT = 8080
 
 
@@ -64,7 +64,7 @@ def handle_input(sock, parser, sessions, messages_ack, sequences, nodes):
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind((DEFAULT_SERVER_IP, DEFAULT_SERVER_PORT))
-print('Listening socket: 127.0.0.1:', DEFAULT_SERVER_PORT)
+print('Listening socket:',DEFAULT_SERVER_IP, ':', DEFAULT_SERVER_PORT)
 
 parser = Header_Parser()
 sessions = UserSessions()

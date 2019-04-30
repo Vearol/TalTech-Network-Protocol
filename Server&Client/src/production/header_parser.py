@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 
-from byte_parser import get_bits, bytes_to_number
+from byte_parser import get_bits, bytes_to_number, bytes_to_GPG
 
 class Header_Parser:
     
