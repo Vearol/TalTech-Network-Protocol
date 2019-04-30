@@ -145,9 +145,13 @@ def send_file(sock, sessions, sequences, messages_ack, packet_type, destination,
 
 
 # ACK message
-def send_ACK(sock, destination, sequence_number):
+def send_ACK(sock, packet_type, destination, sequences):
 
-    packet = create_packet(PROTOCOL_VERSION, packet_types['metadata_message'], flag_types['ACK'], SERVER_KEY, destination, 0, sequence_number, bytes(0))
+    sequence_number = sequences.get(destination)
+
+    packet = create_packet(PROTOCOL_VERSION, packet_type, flag_types['ACK'], SERVER_KEY, destination, 0, sequence_number, bytes(0))
 
     address = get_next_dest(destination)
+
+    print('Sending ACK to', destination)
     sock.sendto(packet, (address.ip, address.port))

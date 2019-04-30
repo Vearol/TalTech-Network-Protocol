@@ -86,10 +86,6 @@ def screen_message(socket, header, sessions, payload):
 
 def metadata_message(header, sessions, payload):
     
-    # TODO check what packet type for metadata
-    if (header.flag == flag_types['ACK']):
-        return
-
     source = header.source
     
     # still incoming...
@@ -127,6 +123,9 @@ def metadata_message(header, sessions, payload):
 
 def handle_packet(socket, nodes, sessions, sequences, messages_ack, header, payload):
     
+    if (header.flag == flag_types['ACK']):
+        return
+
     packet_type = header.packet_type
 
     if packet_type == packet_types['keepalive']:
