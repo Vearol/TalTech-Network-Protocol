@@ -15,6 +15,7 @@ from global_mapping import packet_types, DEFAULT_DESTINATION, DEFAULT_SERVER_GPG
 
 DEFAULT_SERVER_IP = '0.0.0.0'
 DEFAULT_SERVER_PORT = 8080
+DEFAULT_SERVER_GPG = 9223372036854775807
 
 
 def listen(sock, parser, sessions, messages_ack, sequences, nodes):
@@ -45,7 +46,7 @@ def listen(sock, parser, sessions, messages_ack, sequences, nodes):
         # Payload - next 80 bytes(rest of bytes)
         payload = message_bytes[20:]        
 
-        handle_flag(sock, sessions, messages_ack, parser, payload)
+        handle_flag(sock, sessions, sequences, messages_ack, parser, payload)
         handle_packet(sock, nodes, sessions, sequences, messages_ack, parser, payload)
 
 
@@ -77,4 +78,3 @@ listen_thread.start()
 
 input_thread = Thread(target=handle_input, args=(sock, parser, sessions, messages_ack, sequences, nodes))
 input_thread.start()
-

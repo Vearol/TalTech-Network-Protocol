@@ -105,7 +105,6 @@ def metadata_message(header, sessions, payload):
     metadata, skip = parse_file_metadata(payload_data)
 
     file_name = 'file_name'
-    file_type = ''
     file_size = 0
 
     keys = metadata.keys()
@@ -118,6 +117,7 @@ def metadata_message(header, sessions, payload):
 
     file_to_save = open(file_name, 'wb')
     
+
     file_data = payload_data[skip:]
     file_to_save.write(file_data)
 
@@ -128,6 +128,9 @@ def metadata_message(header, sessions, payload):
 
 def handle_packet(socket, nodes, sessions, sequences, messages_ack, header, payload):
     
+    if (header.flag == flag_types['ACK']):
+        return
+
     packet_type = header.packet_type
 
     if packet_type == packet_types['keepalive']:

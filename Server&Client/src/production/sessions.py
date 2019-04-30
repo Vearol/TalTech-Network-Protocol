@@ -16,7 +16,6 @@ class UserSessions:
     def add(self, user_id, payload):
         
         if (user_id in self.user_data.keys()):
-
             data = self.user_data[user_id]
             for byte in payload:
                 data.append(byte)
