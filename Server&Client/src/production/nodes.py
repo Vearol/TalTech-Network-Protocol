@@ -22,16 +22,6 @@ class Nodes:
                 table_key = key
         self.tables.append({table_key: table})
 
-    def get_table_byte(self):
-        ret = ''
-        tables = self.tables
-        for table in tables:
-            for routes in table.values():
-                for dest_id, cost in routes.items():
-                    cost_str = str(cost)
-                    ret += dest_id + cost_str.zfill(2)
-        return bytearray(ret)
-
     def remove_table(self, src_id):
         for idx, table in enumerate(self.tables):
             if src_id in table.keys():
@@ -73,4 +63,4 @@ class Nodes:
         return key
 
     def clear_tables(self):
-        self.tables = []
+        self.tables = [{self.host_id: {self.host_id: 0}}]
