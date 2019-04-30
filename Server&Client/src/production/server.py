@@ -53,5 +53,5 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         # Payload - next 80 bytes(rest of bytes)
         payload = message_bytes[20:]        
 
-        handle_flag(sock, sessions, messages_ack, parser, payload)
+        handle_flag(sock, sessions, sequences, messages_ack, parser, payload)
         handle_packet(sock, nodes, sessions, sequences, messages_ack, parser, payload)

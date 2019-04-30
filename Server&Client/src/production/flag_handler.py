@@ -25,31 +25,32 @@ def first_packet(sessions, source, payload):
     sessions.add(source, payload)
 
 
-def last_packet(sock, sessions, source, packet_type, sequence_number, payload):
+def last_packet(sock, sessions, source, packet_type, sequences, payload):
     
     skip = skip_index(payload, packet_type)
     sessions.add(source, payload[skip:])
 
-    send_ACK(sock, source, sequence_number)
+    send_ACK(sock, packet_type, source, sequences)
 
 
-def single_packet(sock, source, sequence_number, payload):
+def single_packet(sock, packet_type, source, sequences):
    
-    print("Single packet, sending ACK...")
-    # TODO sequence_number check
-
-    send_ACK(sock, source, sequence_number)
+    send_ACK(sock, packet_type, source, sequences)
 
 
-def ACK(user_messages, source, sequence_number):
+def ACK(user_messages, source, sequence_number, sequences):
     
     print('Received ACK from', source)
-    #user_messages.remove(source, sequence_number)
+    user_messages.remove(source, sequence_number)
+
+    local_sequance_number = sequences.get(source)
+    if (sequence_number != local_sequance_number):
+        print('Sequance number missmatch in ACK')
 
 
 def NOT_ACK():
     pass
-    # Send ACK
+    # TODO resend some packet?
 
 
 def error():
@@ -57,7 +58,7 @@ def error():
     # do something
 
 
-def handle_flag(sock, sessions, user_messages, header, payload):
+def handle_flag(sock, sessions, sequances, user_messages, header, payload):
     
     flag = header.flag
 
@@ -70,15 +71,15 @@ def handle_flag(sock, sessions, user_messages, header, payload):
         return
 
     if flag == flag_types['last_packet']:
-        last_packet(sock, sessions, header.source, header.packet_type, header.sequence_number, payload)
+        last_packet(sock, sessions, header.source, header.packet_type, sequances, payload)
         return
 
     if flag == flag_types['single_packet']:
-        single_packet(sock, header.source, header.sequence_number, payload)
+        single_packet(sock, header.packet_type, header.source, sequances)
         return
 
     if flag == flag_types['ACK']:
-        ACK(user_messages, header.source, header.sequence_number)
+        ACK(user_messages, header.source, header.sequence_number, sequances)
         return
 
     if flag == flag_types['NOT_ACK']:
