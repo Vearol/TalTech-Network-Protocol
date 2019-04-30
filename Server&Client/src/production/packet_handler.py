@@ -4,6 +4,7 @@ from global_mapping import packet_types, flag_types, FILENAME_KEY, FILESIZE_KEY
 from message import send_message
 from byte_parser import bytes_to_number
 from files import parse_file_metadata
+from colors import colors
 
 
 def is_fully_received(flag):
@@ -15,19 +16,19 @@ def is_fully_received(flag):
 
 def keep_alive(payload):
     
-    print('keep alive message')
+    print(colors.LOG, 'keep alive message')
     # do something
 
 
 def route_update(payload):
    
-    print('route update message')
+    print(colors.LOG, 'route update message')
     # do something
 
 
 def full_table_request(sock, sessions, sequences, messages_ack, nodes, destination):
     
-    print('request full active routing table message')
+    print(colors.LOG, 'request full active routing table message')
     # TODO check data format
     payload = nodes.get_full_table()
 
@@ -39,7 +40,7 @@ def full_table_update(flag, nodes, sessions, payload):
     if (not is_fully_received(header.flag)):
         return
 
-    print('full table update message')
+    print(colors.LOG, 'full table update message')
 
     if (header.flag == flag_types['single_packet']):
         nodes.update_route_table(payload)
@@ -53,7 +54,7 @@ def full_table_update(flag, nodes, sessions, payload):
 
 def send_request_identity(payload, header):
     
-    print('sent/request identity message')
+    print(colors.LOG, 'sent/request identity message')
     # do something
 
 
@@ -65,12 +66,12 @@ def screen_message(socket, header, sessions, payload):
     if (not is_fully_received(header.flag)):
         return
 
-    print('message for screen from', source)
+    print(colors.INCOME, 'message for screen from', source)
 
     if (header.flag == flag_types['single_packet']):
         
         message_str = payload.decode('utf-8')    
-        print(message_str)
+        print('>', colors.TEXT, message_str)
         return
 
     payload_data = sessions.get_data(source)
@@ -81,7 +82,7 @@ def screen_message(socket, header, sessions, payload):
         
     # TODO store in db
     
-    print(message_str)
+    print(colors.INCOME, message_str)
 
 
 def metadata_message(header, sessions, payload):
@@ -91,7 +92,7 @@ def metadata_message(header, sessions, payload):
 
     # still incoming...
     if (not is_fully_received(header.flag)):
-        print('File incoming...')
+        print(colors.LOG, 'File incoming...')
         return
 
     source = header.source
@@ -100,7 +101,7 @@ def metadata_message(header, sessions, payload):
     if (header.flag == flag_types['last_packet']):
         payload_data = sessions.get_data(source)
 
-    print('message with binary metadata from', header.source)
+    print(colors.LOG, 'message with binary metadata from', header.source)
 
     metadata, skip = parse_file_metadata(payload_data)
 
@@ -113,7 +114,7 @@ def metadata_message(header, sessions, payload):
     if (FILESIZE_KEY in keys):
         file_size = metadata[FILESIZE_KEY]
 
-    print('Saving file:', file_name, file_size, 'bytes')
+    print(colors.INCOME, 'Saving file:', file_name, file_size, 'bytes')
 
     file_to_save = open(file_name, 'wb')
     

@@ -32,11 +32,12 @@ def parse_file_metadata(payload):
     if (metadata_size != 0):
         
         metadata_str = payload[METADATA_HEADER : METADATA_HEADER + metadata_size].decode()
+        
         metadata_dict = json.loads(metadata_str)
 
-        return metadata_dict
+        return (metadata_dict, METADATA_HEADER + metadata_size)
     
-    return {}
+    return ({}, 0)
 
 
 

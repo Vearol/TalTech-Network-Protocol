@@ -18,7 +18,7 @@ def create_header(protocol_version, packet_type, flag, source, destination, sess
     header[0] = byte0
 
     #byte 1..8     -- SRC ID
-    header[1:9] = number_to_bytes(int(source), 8)
+    header[1:9] = GPG_to_bytes(source)
 
     #byte 9..16    -- DST ID
     header[9:17] = GPG_to_bytes(destination)

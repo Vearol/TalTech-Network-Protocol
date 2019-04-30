@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 
-from byte_parser import get_bits, bytes_to_number
+from byte_parser import get_bits, bytes_to_number, bytes_to_GPG
 
 class Header_Parser:
     
@@ -36,11 +36,11 @@ class Header_Parser:
 
         # byte 1..8     -- SRC ID
         byte1_8 = header_bytes[1:9]
-        self.source = bytes_to_number(byte1_8)
+        self.source = bytes_to_GPG(byte1_8)
 
         # byte 9..16    -- DST ID
         byte9_16 = header_bytes[9:17]
-        self.destination = bytes_to_number(byte9_16)
+        self.destination = bytes_to_GPG(byte9_16)
 
         # byte 17       -- sessionID, identify flow between endpoints
         byte17 = header_bytes[17]
