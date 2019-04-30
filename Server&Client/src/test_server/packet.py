@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 
-from byte_parser import set_bits, number_to_bytes, GPG_to_bytes
+from byte_parser import set_bits, number_to_bytes
 
 
 def create_header(protocol_version, packet_type, flag, source, destination, sessionId, sequence_number):
@@ -21,7 +21,7 @@ def create_header(protocol_version, packet_type, flag, source, destination, sess
     header[1:9] = number_to_bytes(int(source), 8)
 
     #byte 9..16    -- DST ID
-    header[9:17] = GPG_to_bytes(destination)
+    header[9:17] = number_to_bytes(destination, 8)
 
     #byte 17       -- sessionID, identify flow between endpoints
     header[17] = sessionId

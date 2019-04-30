@@ -1,7 +1,5 @@
 #! /usr/bin/python3
 
-import binascii
-
 # get value of first N bits in number
 def get_bits(number, bits):
         
@@ -26,11 +24,11 @@ def set_bits(number, bit_from, bit_to, value):
 
 # convert bytearray to number
 def bytes_to_number(byte_array):
-    
+        
     value = 0
     size = len(byte_array)
     for i in range(size):
-        byte = int(byte_array[size - 1 - i])
+        byte = byte_array[size - 1 - i]
         for j in range(8):
             value |= (byte & (1 << j)) << (i * 8)
     return value
@@ -47,10 +45,3 @@ def number_to_bytes(value, size):
         value = value >> 8
     
     return byte_arr
-
-def GPG_to_bytes(key):
-    return bytearray(binascii.unhexlify(key.encode()))
-
-
-def bytes_to_GPG(key):
-    return binascii.unhexlify(key)
