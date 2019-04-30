@@ -6,6 +6,7 @@ from global_mapping import *
 from packet import create_packet
 from files import generate_file_metadata
 from byte_parser import number_to_bytes
+from colors import colors
 
 
 class UserMessageACK:
@@ -32,21 +33,55 @@ class UserMessageACK:
 # sequence number storage
 class UserMessageSN:
     def __init__(self):
-        self.message_sn = {}
+        self.out_message_sn = {}
+        self.in_message_sn = {}
     
-    def add(self, user_id, sequence_number):
+    def add_out(self, user_id, sequence_number):
         
-        if (user_id in self.message_sn.keys()):  
-            self.message_sn[user_id] += sequence_number
+        key = user_id.lower()
+
+        if (key in self.out_message_sn.keys()):  
+            self.out_message_sn[key] += sequence_number
         else:
-            self.message_sn[user_id] = sequence_number
+            self.out_message_sn[key] = sequence_number
 
-        if (self.message_sn[user_id] > MAX_SN):
-                self.message_sn[user_id] -= MAX_SN
+        if (self.out_message_sn[key] > MAX_SN):
+                self.out_message_sn[key] -= MAX_SN
 
-    def get(self, user_id):
 
-        return self.message_sn[user_id]
+    def get_out(self, user_id):
+
+        key = user_id.lower()
+
+        if (key in self.out_message_sn.keys()):
+            return self.out_message_sn[key]
+        
+        self.out_message_sn[key] = 0
+        return 0
+    
+
+    def add_in(self, user_id, sequence_number):
+
+        key = user_id.lower()
+        
+        if (key in self.in_message_sn.keys()):  
+            self.in_message_sn[key] += sequence_number
+        else:
+            self.in_message_sn[key] = sequence_number
+
+        if (self.in_message_sn[key] > MAX_SN):
+                self.in_message_sn[key] -= MAX_SN
+
+
+    def get_in(self, user_id):
+
+        key = user_id.lower()
+
+        if (key in self.in_message_sn.keys()):
+            return self.in_message_sn[key]
+        
+        self.in_message_sn[key] = 0
+        return 0
 
 
 # send usual packets
@@ -55,20 +90,18 @@ def send_message(sock, sessions, sequences, messages_ack, packet_type, destinati
     session_id = sessions.get_new_session(destination)
 
     size = len(payload)
-    address_ip = '127.0.0.1'
-    address_port = 8080
 
     flag = flag_types['single_packet']
 
     if (size > PAYLOAD_BUFFER):
         flag = flag_types['first_packet']
     else:
-        sequences.add(destination, size)
-        sequence_number = sequences.get(destination)
-
+        sequences.add_out(destination, size)
+        sequence_number = sequences.get_out(destination)
+        
         packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload)
 
-        sock.sendto(packet, (DEFAULT_DEST_IP, address_port))
+        sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
 
         return
 
@@ -78,12 +111,12 @@ def send_message(sock, sessions, sequences, messages_ack, packet_type, destinati
         range_from = i * PAYLOAD_BUFFER
         range_to = range_from + PAYLOAD_BUFFER
 
-        sequences.add(destination, PAYLOAD_BUFFER)
-        sequence_number = sequences.get(destination)
+        sequences.add_out(destination, PAYLOAD_BUFFER)
+        sequence_number = sequences.get_out(destination)
 
         packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload[range_from:range_to])
 
-        sock.sendto(packet, (address.ip, address.port))
+        sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
 
         flag = flag_types['normal']
         sequence_number.add(destination, PAYLOAD_BUFFER)
@@ -92,12 +125,13 @@ def send_message(sock, sessions, sequences, messages_ack, packet_type, destinati
 
     data_sent = PAYLOAD_BUFFER * chunks
 
-    sequences.add(destination, size - data_sent)
-    sequence_number = sequences.get(destination)
+    sequences.add_out(destination, size - data_sent)
+    sequence_number = sequences.get_out(destination)
 
     packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload[data_sent:])
 
-    sock.sendto(packet, (address_ip, address_port))
+    sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
+
     messages_ack.add(destination, sequence_number)
 
 
@@ -105,9 +139,6 @@ def send_message(sock, sessions, sequences, messages_ack, packet_type, destinati
 def send_file(sock, sessions, sequences, messages_ack, packet_type, destination, file_path):
 
     session_id = sessions.get_new_session(destination)
-
-    address_ip = '127.0.0.1'
-    address_port = 8080
 
     metadata, file_size = generate_file_metadata(file_path)
 
@@ -128,12 +159,12 @@ def send_file(sock, sessions, sequences, messages_ack, packet_type, destination,
 
     while (file_data):
 
-        sequences.add(destination, len(data))
-        sequence_number = sequences.get(destination)
+        sequences.add_out(destination, len(data))
+        sequence_number = sequences.get_out(destination)
 
         packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, data)
         
-        if ( sock.sendto(packet, (address_ip, address_port)) ):
+        if ( sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT)) ):
             file_data = file_to_send.read(PAYLOAD_BUFFER - METADATA_HEADER)
             data = number_to_bytes(0, METADATA_HEADER) + file_data
             
@@ -148,11 +179,11 @@ def send_file(sock, sessions, sequences, messages_ack, packet_type, destination,
 
 
 # ACK message
-def send_ACK(sock, destination, sequence_number):
+def send_ACK(sock, packet_type, destination, sequences):
 
-    packet = create_packet(PROTOCOL_VERSION, packet_types['metadata_message'], flag_types['ACK'], DEFAULT_SERVER_GPG, DEFAULT_DESTINATION, 0, sequence_number, bytes(0))
+    sequence_number = sequences.get_in(destination)
 
-    address_ip = '127.0.0.1'
-    address_port = 8080
+    packet = create_packet(PROTOCOL_VERSION, packet_type, flag_types['ACK'], SERVER_KEY, DEFAULT_DESTINATION, 0, sequence_number, bytes(0))
 
-    sock.sendto(packet, (address_ip, address_port))
+    print(colors.LOG, 'Sending ACK to', destination)
+    sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))

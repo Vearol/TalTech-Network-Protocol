@@ -4,6 +4,7 @@ from global_mapping import packet_types, flag_types, METADATA_HEADER
 from packet import create_packet
 from message import send_ACK
 from byte_parser import bytes_to_number
+from colors import colors
 
 
 def skip_index(payload, packet_type):
@@ -40,12 +41,12 @@ def single_packet(sock, packet_type, source, sequences):
 
 def ACK(user_messages, source, sequence_number, sequences):
     
-    print('Received ACK from', source)
+    print(colors.LOG, 'Received ACK from', source)
     user_messages.remove(source, sequence_number)
-
-    local_sequance_number = sequences.get(source)
+    
+    local_sequance_number = sequences.get_out(source)
     if (sequence_number != local_sequance_number):
-        print('Sequance number missmatch in ACK')
+        print(colors.ERROR, 'Sequance number missmatch in ACK')
 
 
 def NOT_ACK():
@@ -60,6 +61,9 @@ def error():
 
 def handle_flag(sock, sessions, sequances, user_messages, header, payload):
     
+    # add incoming seqance number no matter what
+    sequances.add_in(header.source, len(payload))
+
     flag = header.flag
 
     if flag == flag_types['normal']:

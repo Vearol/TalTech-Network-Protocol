@@ -53,4 +53,4 @@ def GPG_to_bytes(key):
 
 
 def bytes_to_GPG(key):
-    return binascii.unhexlify(key)
+    return binascii.hexlify(key).decode()
