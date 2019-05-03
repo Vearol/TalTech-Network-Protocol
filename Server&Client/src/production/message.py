@@ -2,7 +2,8 @@
 
 import time
 
-from global_mapping import *
+from global_config import *
+from global_data import GlobalData
 from packet import create_packet
 from files import generate_file_metadata
 from byte_parser import number_to_bytes
@@ -84,106 +85,130 @@ class UserMessageSN:
         return 0
 
 
-# send usual packets
-def send_message(sock, sessions, sequences, messages_ack, packet_type, destination, payload):
+class Message:
 
-    session_id = sessions.get_new_session(destination)
+    # send usual packets
+    @staticmethod
+    def send_message(packet_type, destination, payload):
 
-    size = len(payload)
+        session_id = GlobalData.sessions.get_new_session(destination)
 
-    flag = flag_types['single_packet']
+        size = len(payload)
 
-    if (size > PAYLOAD_BUFFER):
-        flag = flag_types['first_packet']
-    else:
-        sequences.add_out(destination, size)
-        sequence_number = sequences.get_out(destination)
+        flag = flag_types['single_packet']
+
+        if (size > PAYLOAD_BUFFER):
+            flag = flag_types['first_packet']
+        else:
+            GlobalData.sequences.add_out(destination, size)
+            sequence_number = GlobalData.sequences.get_out(destination)
         
-        packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload)
+            packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload)
 
-        sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
+            with GlobalData.lock:
+                GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
 
-        return
+            return
 
-    chunks = int(size / PAYLOAD_BUFFER)
+        chunks = int(size / PAYLOAD_BUFFER)
 
-    for i in range(chunks):
-        range_from = i * PAYLOAD_BUFFER
-        range_to = range_from + PAYLOAD_BUFFER
+        for i in range(chunks):
+            range_from = i * PAYLOAD_BUFFER
+            range_to = range_from + PAYLOAD_BUFFER
 
-        sequences.add_out(destination, PAYLOAD_BUFFER)
-        sequence_number = sequences.get_out(destination)
+            GlobalData.sequences.add_out(destination, PAYLOAD_BUFFER)
+            sequence_number = GlobalData.sequences.get_out(destination)
 
-        packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload[range_from:range_to])
+            packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload[range_from:range_to])
 
-        sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
+            with GlobalData.lock:
+                GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
 
-        flag = flag_types['normal']
-        sequence_number.add(destination, PAYLOAD_BUFFER)
+            flag = flag_types['normal']
+            GlobalData.sequences.add_out(destination, PAYLOAD_BUFFER)
 
-    flag = flag_types['last_packet']
+        flag = flag_types['last_packet']
 
-    data_sent = PAYLOAD_BUFFER * chunks
+        data_sent = PAYLOAD_BUFFER * chunks
 
-    sequences.add_out(destination, size - data_sent)
-    sequence_number = sequences.get_out(destination)
+        GlobalData.sequences.add_out(destination, size - data_sent)
+        sequence_number = GlobalData.sequences.get_out(destination)
 
-    packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload[data_sent:])
+        packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload[data_sent:])
 
-    sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
+        with GlobalData.lock:
+            GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
 
-    messages_ack.add(destination, sequence_number)
+        GlobalData.messages_ack.add(destination, sequence_number)
 
 
-# sending files
-def send_file(sock, sessions, sequences, messages_ack, packet_type, destination, file_path):
+    # sending files
+    @staticmethod
+    def send_file(destination, file_path):
 
-    session_id = sessions.get_new_session(destination)
+        packet_type = packet_types['metadata_message']
+        session_id = GlobalData.sessions.get_new_session(destination)
 
-    metadata, file_size = generate_file_metadata(file_path)
+        metadata, file_size = generate_file_metadata(file_path)
 
-    file_to_send = open(file_path, "rb")
+        file_to_send = open(file_path, "rb")
 
-    metadata_length = len(metadata)
-    metadata_header = number_to_bytes(metadata_length, METADATA_HEADER)
+        metadata_length = len(metadata)
+        metadata_header = number_to_bytes(metadata_length, METADATA_HEADER)
 
-    # possible negative value
-    file_data = file_to_send.read(PAYLOAD_BUFFER - METADATA_HEADER - metadata_length)
-    data = metadata_header + metadata + file_data
+        # possible negative value
+        file_data = file_to_send.read(PAYLOAD_BUFFER - METADATA_HEADER - metadata_length)
+        data = metadata_header + metadata + file_data
 
-    size = file_size + metadata_length + METADATA_HEADER
-    
-    flag = flag_types['single_packet']
-    if (size > PAYLOAD_BUFFER):
-        flag = flag_types['first_packet']
-
-    while (file_data):
-
-        sequences.add_out(destination, len(data))
-        sequence_number = sequences.get_out(destination)
-
-        packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, data)
+        size = file_size + metadata_length + METADATA_HEADER
         
-        if ( sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT)) ):
+        flag = flag_types['single_packet']
+        if (size > PAYLOAD_BUFFER):
+            flag = flag_types['first_packet']
+
+        while (file_data):
+
+            GlobalData.sequences.add_out(destination, len(data))
+            sequence_number = GlobalData.sequences.get_out(destination)
+
+            packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, data)
+            
+            with GlobalData.lock:
+                GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
+                    
             file_data = file_to_send.read(PAYLOAD_BUFFER - METADATA_HEADER)
             data = number_to_bytes(0, METADATA_HEADER) + file_data
-            
+                
             flag = flag_types['normal']
-            
+                
             if (len(data) < PAYLOAD_BUFFER):
                 flag = flag_types['last_packet']
 
-        messages_ack.add(destination, sequence_number)
-        
-    file_to_send.close()
+            GlobalData.messages_ack.add(destination, sequence_number)
+            
+        file_to_send.close()
 
 
-# ACK message
-def send_ACK(sock, packet_type, destination, sequences):
+    # ACK message
+    @staticmethod
+    def send_ACK(packet_type, destination):
 
-    sequence_number = sequences.get_in(destination)
+        sequence_number = GlobalData.sequences.get_in(destination)
 
-    packet = create_packet(PROTOCOL_VERSION, packet_type, flag_types['ACK'], SERVER_KEY, DEFAULT_DESTINATION, 0, sequence_number, bytes(0))
+        packet = create_packet(PROTOCOL_VERSION, packet_type, flag_types['ACK'], SERVER_KEY, DEFAULT_DESTINATION, 0, sequence_number, bytes(0))
 
-    print(colors.LOG, 'Sending ACK to', destination)
-    sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
+        print(colors.LOG, 'Sending ACK to', destination)
+
+        with GlobalData.lock:
+            GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
+
+
+    # Forwarding
+    @staticmethod
+    def forward(message, destination):
+    
+        #next_dest = get_next_dest(dest)
+
+        print(colors.LOG, 'Forwarding massage to', dest)
+
+        GlobalData.sock.sendto(message, (next_dest.ip, next_dest.port))
