@@ -4,7 +4,7 @@ import os
 import json
 
 from byte_parser import bytes_to_number
-from global_mapping import METADATA_HEADER, FILENAME_KEY, FILESIZE_KEY, FILETYPE_KEY
+from global_config import METADATA_HEADER, FILENAME_KEY, FILESIZE_KEY, FILETYPE_KEY
 
 
 def generate_file_metadata(file_path):

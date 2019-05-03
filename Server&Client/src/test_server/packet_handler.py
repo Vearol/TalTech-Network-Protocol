@@ -1,7 +1,8 @@
 #! /usr/bin/python3
 
-from global_mapping import packet_types, flag_types, FILENAME_KEY, FILESIZE_KEY
-from message import send_message
+from global_config import packet_types, flag_types, FILENAME_KEY, FILESIZE_KEY
+from global_data import GlobalData
+from message import Message
 from byte_parser import bytes_to_number
 from files import parse_file_metadata
 from colors import colors
@@ -26,16 +27,16 @@ def route_update(payload):
     # do something
 
 
-def full_table_request(sock, sessions, sequences, messages_ack, nodes, destination):
+def full_table_request(destination):
     
     print(colors.LOG, 'request full active routing table message')
     # TODO check data format
-    payload = nodes.get_full_table()
+    payload = GlobalData.nodes.get_full_table()
 
-    send_message(sock, sessions, sequences, messages_ack, packet_types['full_table_update'], destination, payload)
+    GlobalData.send_message(packet_types['full_table_update'], destination, payload)
 
 
-def full_table_update(flag, nodes, sessions, payload):
+def full_table_update(flag, payload):
    
     if (not is_fully_received(header.flag)):
         return
@@ -47,9 +48,9 @@ def full_table_update(flag, nodes, sessions, payload):
         return
     
     router_data = []
-    payload_data = sessions.get_data(source)
+    payload_data = GlobalData.sessions.get_data(source)
 
-    nodes.update_route_table(router_data)
+    GlobalData.nodes.update_route_table(router_data)
 
 
 def send_request_identity(payload, header):
@@ -58,7 +59,7 @@ def send_request_identity(payload, header):
     # do something
 
 
-def screen_message(socket, header, sessions, payload):
+def screen_message(header, payload):
     
     source = header.source
 
@@ -74,7 +75,7 @@ def screen_message(socket, header, sessions, payload):
         print('>', colors.TEXT, message_str)
         return
 
-    payload_data = sessions.get_data(source)
+    payload_data = GlobalData.sessions.get_data(source)
 
     message_str = ''
     for data in payload_data:
@@ -85,7 +86,7 @@ def screen_message(socket, header, sessions, payload):
     print(colors.INCOME, message_str)
 
 
-def metadata_message(header, sessions, payload):
+def metadata_message(header, payload):
 
     if (header.flag == flag_types['ACK']):
         return
@@ -99,7 +100,7 @@ def metadata_message(header, sessions, payload):
     
     payload_data = payload
     if (header.flag == flag_types['last_packet']):
-        payload_data = sessions.get_data(source)
+        payload_data = GlobalData.sessions.get_data(source)
 
     print(colors.LOG, 'message with binary metadata from', header.source)
 
@@ -124,11 +125,13 @@ def metadata_message(header, sessions, payload):
 
     file_to_save.close()
 
-    sessions.remove(source)
+    GlobalData.sessions.remove(source)
 
 
-def handle_packet(socket, nodes, sessions, sequences, messages_ack, header, payload):
+def handle_packet(payload):
     
+    header = GlobalData.header_parser
+
     if (header.flag == flag_types['ACK']):
         return
 
@@ -143,11 +146,11 @@ def handle_packet(socket, nodes, sessions, sequences, messages_ack, header, payl
         return
 
     if packet_type == packet_types['full_table_request']:
-        full_table_request(sock, sessions, sequences, messages_ack, nodes)
+        full_table_request(header.source)
         return
 
     if packet_type == packet_types['full_table_update']:
-        full_table_update(flag, nodes, sessions, payload)
+        full_table_update(flag, payload)
         return
 
     if packet_type == packet_types['send_request_identity']:
@@ -155,10 +158,10 @@ def handle_packet(socket, nodes, sessions, sequences, messages_ack, header, payl
         return
 
     if packet_type == packet_types['screen_message']:
-        screen_message(socket, header, sessions, payload)
+        screen_message(header, payload)
         return
 
     if packet_type == packet_types['metadata_message']:
-        metadata_message(header, sessions, payload)
+        metadata_message(header, payload)
         return
 

@@ -1,8 +1,9 @@
 #! /usr/bin/python3
 
-from global_mapping import packet_types, flag_types, METADATA_HEADER
+from global_config import packet_types, flag_types, METADATA_HEADER
+from global_data import GlobalData
 from packet import create_packet
-from message import send_ACK
+from message import Message
 from byte_parser import bytes_to_number
 from colors import colors
 
@@ -15,37 +16,40 @@ def skip_index(payload, packet_type):
     return 0
 
 
-def normal(sessions, source, packet_type, payload):
+def normal(source, packet_type, payload):
     
     skip = skip_index(payload, packet_type)
-    sessions.add(source, payload[skip:])
+    GlobalData.sessions.add(source, payload[skip:])
+
+    Message.send_ACK(packet_type, source)
 
 
-def first_packet(sessions, source, payload):
+def first_packet(source, packet_type, payload):
    
-    sessions.add(source, payload)
+    GlobalData.sessions.add(source, payload)
+
+    Message.send_ACK(packet_type, source)
 
 
-def last_packet(sock, sessions, source, packet_type, sequences, payload):
+def last_packet(source, packet_type, payload):
     
     skip = skip_index(payload, packet_type)
-    sessions.add(source, payload[skip:])
+    GlobalData.sessions.add(source, payload[skip:])
 
-    send_ACK(sock, packet_type, source, sequences)
+    Message.send_ACK(packet_type, source)
 
 
-def single_packet(sock, packet_type, source, sequences):
+def single_packet(packet_type, source):
    
-    send_ACK(sock, packet_type, source, sequences)
+    Message.send_ACK(packet_type, source)
 
 
-def ACK(user_messages, source, sequence_number, sequences):
+def ACK(source, sequence_number):
     
     print(colors.LOG, 'Received ACK from', source)
-    user_messages.remove(source, sequence_number)
-
-    local_sequance_number = sequences.get_out(source)
+    GlobalData.messages_ack.remove(source, sequence_number)
     
+    local_sequance_number = GlobalData.sequences.get_out(source)
     if (sequence_number != local_sequance_number):
         print(colors.ERROR, 'Sequance number missmatch in ACK')
 
@@ -60,31 +64,33 @@ def error():
     # do something
 
 
-def handle_flag(sock, sessions, sequances, user_messages, header, payload):
+def handle_flag(payload):
     
+    header = GlobalData.header_parser
+
     # add incoming seqance number no matter what
-    sequances.add_in(header.source, len(payload))
+    GlobalData.sequences.add_in(header.source, len(payload))
 
     flag = header.flag
 
     if flag == flag_types['normal']:
-        normal(sessions, header.source, header.packet_type, payload)
+        normal(header.source, header.packet_type, payload)
         return
 
     if flag == flag_types['first_packet']:
-        first_packet(sessions, header.source, payload)
+        first_packet(header.source, header.packet_type, payload)
         return
 
     if flag == flag_types['last_packet']:
-        last_packet(sock, sessions, header.source, header.packet_type, sequances, payload)
+        last_packet(header.source, header.packet_type, payload)
         return
 
     if flag == flag_types['single_packet']:
-        single_packet(sock, header.packet_type, header.source, sequances)
+        single_packet(header.packet_type, header.source)
         return
 
     if flag == flag_types['ACK']:
-        ACK(user_messages, header.source, header.sequence_number, sequances)
+        ACK(header.source, header.sequence_number)
         return
 
     if flag == flag_types['NOT_ACK']:

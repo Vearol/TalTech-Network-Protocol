@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 
-from global_mapping import MAX_SESSION
+from global_config import MAX_SESSION
 
 class UserSessions:
     
