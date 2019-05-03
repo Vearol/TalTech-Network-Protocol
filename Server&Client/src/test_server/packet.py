@@ -1,11 +1,12 @@
 #! /usr/bin/python3
 
 from byte_parser import set_bits, number_to_bytes, GPG_to_bytes
+from global_config import HEADER_BUFFER
 
 
 def create_header(protocol_version, packet_type, flag, source, destination, sessionId, sequence_number):
     
-    header = bytearray(20)
+    header = bytearray(HEADER_BUFFER)
     #byte 0        -- protocol version,packet type, flags
     #bits 0..1 -- protocol version  Currently always Version 0x00
     #bits 2..4 -- packet type
@@ -34,9 +35,9 @@ def create_header(protocol_version, packet_type, flag, source, destination, sess
 
 def create_packet(protocol_version, packet_type, flag, source, destination, sessionId, sequence_number, payload):
     
-    packet = bytearray(21)
+    packet = bytearray(HEADER_BUFFER + 1)
 
-    packet[0:20] = create_header(protocol_version, packet_type, flag, source, destination, sessionId, sequence_number)
-    packet[20:] = payload
+    packet[0:HEADER_BUFFER] = create_header(protocol_version, packet_type, flag, source, destination, sessionId, sequence_number)
+    packet[HEADER_BUFFER:] = payload
 
     return packet

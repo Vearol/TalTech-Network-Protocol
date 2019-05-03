@@ -8,9 +8,10 @@ from header_parser import Header_Parser
 from packet_handler import handle_packet
 from flag_handler import handle_flag
 from sessions import UserSessions
-from message import UserMessageACK, UserMessageSN, Message
+from message import UserMessageACK, Message
+from sequences import UserMessageSN
 from nodes import Nodes
-from global_config import packet_types, DEFAULT_DESTINATION, SERVER_KEY, DEFAULT_SERVER_IP, DEFAULT_SERVER_PORT
+from global_config import packet_types, DEFAULT_DESTINATION, SERVER_KEY, DEFAULT_SERVER_IP, DEFAULT_SERVER_PORT, HEADER_BUFFER
 from colors import colors
 from global_data import GlobalData
 
@@ -19,29 +20,30 @@ def listen():
     
     while True:
         # Receive bytes. 100 bytes in theory, can decrease later
-        message_bytes, address_from = GlobalData.sock.recvfrom(2048)
+        message_bytes, address_from = GlobalData.sock.recvfrom(100)
 
-        if (len(message_bytes) < 20):
+        if (len(message_bytes) < HEADER_BUFFER):
             print(colors.ERROR, 'Input message size was less than 20 bytes. Invalid packet.')
             continue
 
         # Header takes first 20 bytes. Try to parse
-        header = message_bytes[0:20]
+        header_bytes = message_bytes[0:HEADER_BUFFER]
 
         try:
-            GlobalData.header_parser.parse(header)
+            GlobalData.header.parse(header_bytes)
 
         except IndexError:
             print(colors.ERROR, 'Couldn\'t parse header, skip packet')
             continue
 
         # Forward message
-        if (GlobalData.header_parser.destination.lower() != SERVER_KEY.lower()):
-            Message.forward(message_bytes, GlobalData.header_parser.destination)
+        destination = GlobalData.header.destination
+        if (destination.lower() != SERVER_KEY.lower()):
+            Message.forward(message_bytes, destination)
             continue
 
         # Payload - next 80 bytes(rest of bytes)
-        payload = message_bytes[20:]        
+        payload = message_bytes[HEADER_BUFFER:]       
 
         handle_flag(payload)
         handle_packet(payload)

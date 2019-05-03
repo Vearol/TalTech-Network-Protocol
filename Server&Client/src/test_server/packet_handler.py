@@ -130,7 +130,7 @@ def metadata_message(header, payload):
 
 def handle_packet(payload):
     
-    header = GlobalData.header_parser
+    header = GlobalData.header
 
     if (header.flag == flag_types['ACK']):
         return

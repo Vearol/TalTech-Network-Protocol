@@ -65,8 +65,8 @@ def error():
 
 
 def handle_flag(payload):
-    
-    header = GlobalData.header_parser
+
+    header = GlobalData.header
 
     # add incoming seqance number no matter what
     GlobalData.sequences.add_in(header.source, len(payload))
