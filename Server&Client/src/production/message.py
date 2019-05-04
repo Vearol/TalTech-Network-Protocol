@@ -81,6 +81,7 @@ class Message:
     def send_message(packet_type, destination, payload):
 
         session_id = GlobalData.sessions.get_new_session(destination)
+        ip, port = GlobalData.nodes.get_network_info(destination)
 
         size = len(payload)
 
@@ -95,7 +96,6 @@ class Message:
             packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload)
 
             with GlobalData.lock:
-                ip, port = GlobalData.nodes.get_network_info(destination)
                 GlobalData.sock.sendto(packet, (ip, port))
                 # GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
 
@@ -116,7 +116,6 @@ class Message:
             packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload[range_from:range_to])
 
             with GlobalData.lock:
-                ip, port = GlobalData.nodes.get_network_info(destination)
                 GlobalData.sock.sendto(packet, (ip, port))
                 # GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
 
@@ -134,9 +133,7 @@ class Message:
         packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload[data_sent:])
 
         with GlobalData.lock:
-            ip, port = GlobalData.nodes.get_network_info(destination)
-
-            GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
+            GlobalData.sock.sendto(packet, (ip, port))
 
         GlobalData.messages.add(destination, sequence_number, payload[data_sent:])
         GlobalData.messages.add_ack(destination, sequence_number)
@@ -203,8 +200,9 @@ class Message:
         
         packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, 0, sequence_number, payload)
 
+        ip, port = GlobalData.nodes.get_network_info(destination)
         with GlobalData.lock:
-            GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
+            GlobalData.sock.sendto(packet, (ip, port))
 
 
     # ACK message
