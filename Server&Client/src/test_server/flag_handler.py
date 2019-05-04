@@ -16,47 +16,54 @@ def skip_index(payload, packet_type):
     return 0
 
 
-def normal(source, packet_type, payload):
+def normal(source, packet_type, sequence_number, payload):
     
     skip = skip_index(payload, packet_type)
     GlobalData.sessions.add(source, payload[skip:])
 
-    Message.send_ACK(packet_type, source)
+    Message.send_ACK(packet_type, sequence_number, source)
 
 
-def first_packet(source, packet_type, payload):
+def first_packet(source, packet_type, sequence_number, payload):
    
     GlobalData.sessions.add(source, payload)
 
-    Message.send_ACK(packet_type, source)
+    Message.send_ACK(packet_type, sequence_number, source)
 
 
-def last_packet(source, packet_type, payload):
+def last_packet(source, packet_type, sequence_number, payload):
     
     skip = skip_index(payload, packet_type)
     GlobalData.sessions.add(source, payload[skip:])
 
-    Message.send_ACK(packet_type, source)
+    Message.send_ACK(packet_type, sequence_number, source)
 
 
-def single_packet(packet_type, source):
+def single_packet(packet_type, sequence_number, source):
    
-    Message.send_ACK(packet_type, source)
+    Message.send_ACK(packet_type, sequence_number, source)
 
 
-def ACK(source, sequence_number):
+def ACK(source, packet_type, sequence_number):
     
     print(colors.LOG, 'Received ACK from', source)
-    GlobalData.messages_ack.remove(source, sequence_number)
+    GlobalData.messages.remove(source, sequence_number)
     
-    local_sequance_number = GlobalData.sequences.get_out(source)
+    local_sequance_number = GlobalData.messages.get_ack(source)
+
     if (sequence_number != local_sequance_number):
         print(colors.ERROR, 'Sequance number missmatch in ACK')
 
 
-def NOT_ACK():
-    pass
-    # TODO resend some packet?
+def NOT_ACK(source, packet_type, sequence_number):
+
+    GlobalData.messages.get_ack(source)
+
+    payload = GlobalData.messages.get_packet(source, sequence_number)
+    if (len(payload) == 0):
+        return
+
+    Message.resend_message(packet_type, source, payload)
 
 
 def error():
@@ -74,27 +81,27 @@ def handle_flag(payload):
     flag = header.flag
 
     if flag == flag_types['normal']:
-        normal(header.source, header.packet_type, payload)
+        normal(header.source, header.packet_type, header.sequence_number, payload)
         return
 
     if flag == flag_types['first_packet']:
-        first_packet(header.source, header.packet_type, payload)
+        first_packet(header.source, header.packet_type, header.sequence_number, payload)
         return
 
     if flag == flag_types['last_packet']:
-        last_packet(header.source, header.packet_type, payload)
+        last_packet(header.source, header.packet_type, header.sequence_number, payload)
         return
 
     if flag == flag_types['single_packet']:
-        single_packet(header.packet_type, header.source)
+        single_packet(header.packet_type, header.sequence_number, header.source)
         return
 
     if flag == flag_types['ACK']:
-        ACK(header.source, header.sequence_number)
+        ACK(header.source, header.packet_type, header.sequence_number)
         return
 
     if flag == flag_types['NOT_ACK']:
-        NOT_ACK()
+        NOT_ACK(header.source, header.packet_type, header.sequence_number)
         return
 
     if flag == flag_types['error']:
