@@ -129,7 +129,7 @@ def handle_packet(payload):
     
     header = GlobalData.header
 
-    if (header.flag == flag_types['ACK']):
+    if (header.flag == flag_types['ACK'] or header.flag == flag_types['NOT_ACK']):
         return
 
     packet_type = header.packet_type

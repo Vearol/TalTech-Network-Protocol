@@ -73,11 +73,11 @@ print(colors.SERVER, 'Listening socket:',DEFAULT_SERVER_IP, ':', DEFAULT_SERVER_
 
 header_parser = Header_Parser()
 sessions = UserSessions()
-messages_ack = UserMessageACK()
+messages = UserMessageACK()
 sequences = UserMessageSN()
 nodes = Nodes()
 
-GlobalData.set_data(sock, sequences, sessions, messages_ack, nodes, header_parser)
+GlobalData.set_data(sock, sequences, sessions, messages, nodes, header_parser)
 
 listen_thread = Thread(target=listen)
 listen_thread.start()

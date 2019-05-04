@@ -9,16 +9,16 @@ class GlobalData:
     lock = Lock()
     sequences = None
     sessions = None
-    messages_ack = None
+    messages = None
     nodes = None
     header = None
 
 
     @staticmethod
-    def set_data(socket, sequences, sessions, messages_ack, nodes, header):
+    def set_data(socket, sequences, sessions, messages, nodes, header):
         GlobalData.sock = socket
         GlobalData.sequences = sequences
         GlobalData.sessions = sessions
-        GlobalData.messages_ack = messages_ack
+        GlobalData.messages = messages
         GlobalData.nodes = nodes
         GlobalData.header = header
