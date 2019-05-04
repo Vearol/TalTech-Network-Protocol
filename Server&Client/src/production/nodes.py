@@ -12,6 +12,8 @@ class Nodes:
         self.nodes_data = INIT_NODES
 
     def set_network_info(self, key, ip, port):
+        if key not in self.nodes_data.keys():
+            self.nodes_data[key] = [0, 0, 0]
         self.nodes_data[key][0] = ip
         self.nodes_data[key][1] = port
 
