@@ -77,13 +77,10 @@ def screen_message(header, payload):
 
     payload_data = GlobalData.sessions.get_data(source)
 
-    message_str = ''
-    for data in payload_data:
-        message_str += data.decode('utf-8')
-        
+    message_str = payload_data.decode()
     # TODO store in db
     
-    print(colors.INCOME, message_str)
+    print('>', colors.TEXT, message_str)
 
 
 def metadata_message(header, payload):
@@ -130,7 +127,7 @@ def metadata_message(header, payload):
 
 def handle_packet(payload):
     
-    header = GlobalData.header_parser
+    header = GlobalData.header
 
     if (header.flag == flag_types['ACK']):
         return
