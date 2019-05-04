@@ -1,11 +1,28 @@
 #! /usr/bin/python3
 
 
+from global_config import INIT_NEIGHBORS
+
+
 class Nodes:
 
     def __init__(self, host_id='nodeself'):
         self.host_id = host_id
         self.tables = [{host_id: {host_id: 0}}]
+        self.neighbors = INIT_NEIGHBORS
+
+    def set_neighbor_info(self, neighbor_id, ip, port):
+        self.neighbors[neighbor_id] = [ip, port]
+
+    def get_neighbor_info(self, neighbor_id):
+        if neighbor_id in self.neighbors.keys():
+            return self.neighbors[neighbor_id]
+        else:
+            return None
+
+    def remove_neighbor_info(self, neighbor_id):
+        if neighbor_id in self.neighbors.keys():
+            self.neighbors.pop(neighbor_id)
 
     def add_table_byte(self, table_byte, cost=0):
         array = []
