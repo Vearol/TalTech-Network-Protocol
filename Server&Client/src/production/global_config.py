@@ -44,3 +44,7 @@ flag_types = {
     'NOT_ACK' : 6,
     'error' : 7
 }
+
+INIT_NODES = {
+        "nodeself": ["127.0.0.1", 8088, "nickname"]
+}
