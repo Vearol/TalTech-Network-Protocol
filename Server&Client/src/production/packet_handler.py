@@ -33,7 +33,7 @@ def full_table_request(destination):
     # TODO check data format
     payload = GlobalData.nodes.get_full_table()
 
-    GlobalData.send_message(packet_types['full_table_update'], destination, payload)
+    Message.send_message(packet_types['full_table_update'], destination, payload)
 
 
 def full_table_update(flag, payload):
