@@ -21,9 +21,9 @@ class Nodes:
         if key in self.nodes_data.keys():
             ip = self.nodes_data[key][0]
             port = self.nodes_data[key][1]
-            return [ip, port]
+            return (ip, port)
         else:
-            return None
+            return (None, None)
 
     def remove_network_info(self, key):
         if key in self.nodes_data.keys():
