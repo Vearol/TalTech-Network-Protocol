@@ -45,6 +45,6 @@ flag_types = {
     'error' : 7
 }
 
-INIT_NEIGHBORS = {
-        "nodeself": ["127.0.0.1", 8088]
+INIT_NODES = {
+        "nodeself": ["127.0.0.1", 8088, "nickname"]
 }
