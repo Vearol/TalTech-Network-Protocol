@@ -1,11 +1,41 @@
 #! /usr/bin/python3
 
 
+from global_config import INIT_NODES
+
+
 class Nodes:
 
     def __init__(self, host_id='nodeself'):
         self.host_id = host_id
         self.tables = [{host_id: {host_id: 0}}]
+        self.nodes_data = INIT_NODES
+
+    def set_network_info(self, key, ip, port):
+        if key not in self.nodes_data.keys():
+            self.nodes_data[key] = [0, 0, 0]
+        self.nodes_data[key][0] = ip
+        self.nodes_data[key][1] = port
+
+    def get_network_info(self, key):
+        if key in self.nodes_data.keys():
+            ip = self.nodes_data[key][0]
+            port = self.nodes_data[key][1]
+            return (ip, port)
+        else:
+            return (None, None)
+
+    def remove_network_info(self, key):
+        if key in self.nodes_data.keys():
+            self.nodes_data.pop(key)
+
+    def set_nickname(self, key, nickname):
+        if key in self.nodes_data.keys():
+            self.nodes_data[key][2] = nickname
+
+    def get_nickname(self, key):
+        if key in self.nodes_data.keys():
+            return self.nodes_data[key][2]
 
     def add_table_byte(self, table_byte, cost=0):
         array = []

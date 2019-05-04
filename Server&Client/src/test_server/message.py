@@ -81,6 +81,7 @@ class Message:
     def send_message(packet_type, destination, payload):
 
         session_id = GlobalData.sessions.get_new_session(destination)
+        ip, port = GlobalData.nodes.get_network_info(destination)
 
         size = len(payload)
 
@@ -95,7 +96,8 @@ class Message:
             packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload)
 
             with GlobalData.lock:
-                GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
+                GlobalData.sock.sendto(packet, (ip, port))
+                # GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
 
             GlobalData.messages.add(destination, sequence_number, payload)
             GlobalData.messages.add_ack(destination, sequence_number)
@@ -114,7 +116,8 @@ class Message:
             packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload[range_from:range_to])
 
             with GlobalData.lock:
-                GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
+                GlobalData.sock.sendto(packet, (ip, port))
+                # GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
 
             flag = flag_types['normal']
             GlobalData.messages.add(destination, sequence_number, payload[range_from:range_to])
@@ -130,7 +133,7 @@ class Message:
         packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload[data_sent:])
 
         with GlobalData.lock:
-            GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
+            GlobalData.sock.sendto(packet, (ip, port))
 
         GlobalData.messages.add(destination, sequence_number, payload[data_sent:])
         GlobalData.messages.add_ack(destination, sequence_number)
@@ -142,6 +145,8 @@ class Message:
 
         packet_type = packet_types['metadata_message']
         session_id = GlobalData.sessions.get_new_session(destination)
+        
+        ip, port = GlobalData.nodes.get_network_info(destination)
 
         metadata, file_size = generate_file_metadata(file_path)
 
@@ -168,7 +173,8 @@ class Message:
             packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, data)
             
             with GlobalData.lock:
-                GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
+                GlobalData.sock.sendto(packet, (ip, port))
+                # GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
 
             GlobalData.messages.add(destination, sequence_number, data)
             GlobalData.messages.add_ack(destination, sequence_number)     
@@ -194,8 +200,9 @@ class Message:
         
         packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, 0, sequence_number, payload)
 
+        ip, port = GlobalData.nodes.get_network_info(destination)
         with GlobalData.lock:
-            GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
+            GlobalData.sock.sendto(packet, (ip, port))
 
 
     # ACK message
@@ -216,15 +223,17 @@ class Message:
             print(colors.LOG, 'Sending NOT_ACK to', destination)
 
         with GlobalData.lock:
-            GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
+            ip, port = GlobalData.nodes.get_network_info(destination)
+            GlobalData.sock.sendto(packet, (ip, port))
+            # GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
 
 
     # Forwarding
     @staticmethod
     def forward(message, destination):
     
-        #next_dest = get_next_dest(dest)
+        ip, port = GlobalData.nodes.get_network_info(destination)
 
-        print(colors.LOG, 'Forwarding massage to', dest)
+        print(colors.LOG, 'Forwarding massage to', ip)
 
-        GlobalData.sock.sendto(message, (next_dest.ip, next_dest.port))
+        GlobalData.sock.sendto(message, (ip, port))
