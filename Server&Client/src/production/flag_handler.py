@@ -21,14 +21,14 @@ def normal(source, packet_type, sequence_number, payload):
     skip = skip_index(payload, packet_type)
     GlobalData.sessions.add(source, payload[skip:])
 
-    Message.send_ACK(packet_type, sequence_number, source, len(payload))
+    Message.send_ACK(packet_type, sequence_number, source)
 
 
 def first_packet(source, packet_type, sequence_number, payload):
    
     GlobalData.sessions.add(source, payload)
 
-    Message.send_ACK(packet_type, sequence_number, source, len(payload))
+    Message.send_ACK(packet_type, sequence_number, source)
 
 
 def last_packet(source, packet_type, sequence_number, payload):
@@ -36,12 +36,12 @@ def last_packet(source, packet_type, sequence_number, payload):
     skip = skip_index(payload, packet_type)
     GlobalData.sessions.add(source, payload[skip:])
 
-    Message.send_ACK(packet_type, sequence_number, source, len(payload))
+    Message.send_ACK(packet_type, sequence_number, source)
 
 
-def single_packet(packet_type, sequence_number, source, payload_size):
+def single_packet(packet_type, sequence_number, source):
    
-    Message.send_ACK(packet_type, sequence_number, source, payload_size)
+    Message.send_ACK(packet_type, sequence_number, source)
 
 
 def ACK(source, packet_type, sequence_number):
@@ -93,7 +93,7 @@ def handle_flag(payload):
         return
 
     if flag == flag_types['single_packet']:
-        single_packet(header.packet_type, header.sequence_number, header.source, len(payload))
+        single_packet(header.packet_type, header.sequence_number, header.source)
         return
 
     if flag == flag_types['ACK']:

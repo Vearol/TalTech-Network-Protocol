@@ -200,7 +200,7 @@ class Message:
 
     # ACK message
     @staticmethod
-    def send_ACK(packet_type, sequence_number, destination, payload_size):
+    def send_ACK(packet_type, sequence_number, destination):
 
         local_sequence_number = GlobalData.sequences.get_in(destination)
 
