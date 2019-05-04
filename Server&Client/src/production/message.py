@@ -53,7 +53,9 @@ class Message:
             packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload)
 
             with GlobalData.lock:
-                GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
+                ip, port = GlobalData.nodes.get_network_info(destination)
+                GlobalData.sock.sendto(packet, (ip, port))
+                # GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
 
             return
 
@@ -69,7 +71,9 @@ class Message:
             packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload[range_from:range_to])
 
             with GlobalData.lock:
-                GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
+                ip, port = GlobalData.nodes.get_network_info(destination)
+                GlobalData.sock.sendto(packet, (ip, port))
+                # GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
 
             flag = flag_types['normal']
             GlobalData.sequences.add_out(destination, PAYLOAD_BUFFER)
@@ -84,6 +88,8 @@ class Message:
         packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload[data_sent:])
 
         with GlobalData.lock:
+            ip, port = GlobalData.nodes.get_network_info(destination)
+
             GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
 
         GlobalData.messages_ack.add(destination, sequence_number)
@@ -121,7 +127,9 @@ class Message:
             packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, data)
             
             with GlobalData.lock:
-                GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
+                ip, port = GlobalData.nodes.get_network_info(destination)
+                GlobalData.sock.sendto(packet, (ip, port))
+                # GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
                     
             file_data = file_to_send.read(PAYLOAD_BUFFER - METADATA_HEADER)
             data = number_to_bytes(0, METADATA_HEADER) + file_data
@@ -147,15 +155,17 @@ class Message:
         print(colors.LOG, 'Sending ACK to', destination)
 
         with GlobalData.lock:
-            GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
+            ip, port = GlobalData.nodes.get_network_info(destination)
+            GlobalData.sock.sendto(packet, (ip, port))
+            # GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
 
 
     # Forwarding
     @staticmethod
     def forward(message, destination):
     
-        #next_dest = get_next_dest(dest)
+        ip, port = GlobalData.nodes.get_network_info(destination)
 
-        print(colors.LOG, 'Forwarding massage to', dest)
+        print(colors.LOG, 'Forwarding massage to', ip)
 
-        GlobalData.sock.sendto(message, (next_dest.ip, next_dest.port))
+        GlobalData.sock.sendto(message, (ip, port))
