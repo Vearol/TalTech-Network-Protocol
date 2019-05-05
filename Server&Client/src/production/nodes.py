@@ -25,7 +25,6 @@ class Nodes:
         else:
             return (None, None)
 
-
     def set_nickname(self, key, nickname):
         if key in self.nodes_data.keys():
             self.nodes_data[key][2] = nickname
@@ -34,10 +33,10 @@ class Nodes:
         if key in self.nodes_data.keys():
             return self.nodes_data[key][2]
 
-    def add_table_byte(self, table_byte, cost=0):
+    def add_table_byte(self, src_id, table_byte, cost=0):
         array = []
         table = {}
-        table_key = ''
+        table_key = src_id
         table_str = table_byte.decode()
         for x in range(len(table_str) / 10):
             array.append(table_str[:10])
@@ -45,8 +44,7 @@ class Nodes:
             key = a[:8]
             value = int(a[9:])
             table[key] = value + cost
-            if value == 0:
-                table_key = key
+        table[src_id] = cost
         self.tables.append({table_key: table})
 
     def remove_table(self, src_id):
