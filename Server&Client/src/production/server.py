@@ -14,6 +14,7 @@ from nodes import Nodes
 from global_config import packet_types, SERVER_KEY, DEFAULT_SERVER_IP, DEFAULT_SERVER_PORT, HEADER_BUFFER
 from colors import colors
 from global_data import GlobalData
+from console import Console
 
 
 def listen():
@@ -50,22 +51,8 @@ def listen():
 
 
 def handle_input():
-
-    MSG_PROMPT = colors.INPUT + 'Enter message, of "file" if send file: ' + colors.TEXT
-    FILE_PROMPT = colors.INPUT + 'Enter file path: ' + colors.TEXT
-    DEST_PROMPT = colors.INPUT + 'Enter destination id: ' + colors.TEXT
-
-    while True:
-        time.sleep(0.5)
-        dest = input(DEST_PROMPT)
-        message = input(MSG_PROMPT)
-
-        if (message == 'file'):
-            file_path = input(FILE_PROMPT)
-            Message.send_file(dest, file_path)
-            continue
-
-        Message.send_message(packet_types['screen_message'], dest, message.encode())
+    console = Console()
+    console.start()
 
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
