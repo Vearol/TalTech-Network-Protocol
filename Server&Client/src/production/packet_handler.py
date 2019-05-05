@@ -1,6 +1,8 @@
 #! /usr/bin/python3
 
-from global_config import packet_types, flag_types, FILENAME_KEY, FILESIZE_KEY
+import json
+
+from global_config import packet_types, flag_types, FILENAME_KEY, FILESIZE_KEY, SERVER_KEY, ID_KEY, RESPONCE_KEY, NAME_KEY
 from global_data import GlobalData
 from message import Message
 from byte_parser import bytes_to_number
@@ -15,10 +17,9 @@ def is_fully_received(flag):
 
     return True
 
-def keep_alive(payload):
+def keep_alive(header):
     
-    print(colors.LOG, 'keep alive message')
-    # do something
+    GlobalData.messages.send_ACK(header.packet_type, header.seqence_number, header.source)
 
 
 def route_update(payload):
@@ -56,8 +57,25 @@ def full_table_update(source, flag, payload):
 
 def send_request_identity(payload, header):
     
-    print(colors.LOG, 'sent/request identity message')
-    # do something
+    identity_data = json.load(payload.decode())
+
+    GlobalData.nodes.set_nickname(header.source, identity_data[NAME_KEY])
+
+    responce_required = bool(identity_data[RESPONCE_KEY])
+    if (responce_required):
+
+        server_name = GlobalData.nodes.get_nickname(SERVER_KEY)
+
+        server_data = {
+            ID_KEY : SERVER_KEY,
+            RESPONCE_KEY : 'false',
+            NAME_KEY : server_name
+        }
+
+        server_data_bytes = json.dumps(server_data).encode()
+
+        GlobalData.messages.send_message(header.packet_type, header.source, server_data_bytes)
+
 
 
 def screen_message(header, payload):
@@ -136,7 +154,7 @@ def handle_packet(payload):
     packet_type = header.packet_type
 
     if packet_type == packet_types['keepalive']:
-        keep_alive(payload)
+        keep_alive(header)
         return
 
     if packet_type == packet_types['route_update']:
