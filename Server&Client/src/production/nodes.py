@@ -25,9 +25,6 @@ class Nodes:
         else:
             return (None, None)
 
-    def remove_network_info(self, key):
-        if key in self.nodes_data.keys():
-            self.nodes_data.pop(key)
 
     def set_nickname(self, key, nickname):
         if key in self.nodes_data.keys():

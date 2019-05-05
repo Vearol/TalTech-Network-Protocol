@@ -31,26 +31,27 @@ def full_table_request(destination):
     
     print(colors.LOG, 'request full active routing table message')
     # TODO check data format
-    payload = GlobalData.nodes.get_full_table()
+    payload = GlobalData.nodes.get_full_table_byte()
 
     Message.send_message(packet_types['full_table_update'], destination, payload)
 
 
-def full_table_update(flag, payload):
+def full_table_update(source, flag, payload):
    
     if (not is_fully_received(header.flag)):
         return
 
     print(colors.LOG, 'full table update message')
 
+    GlobalData.nodes.remove_table(source)
+
     if (header.flag == flag_types['single_packet']):
-        nodes.update_route_table(payload)
+        GlobalData.nodes.add_table_byte(payload)
         return
     
-    router_data = []
     payload_data = GlobalData.sessions.get_data(source)
 
-    GlobalData.nodes.update_route_table(router_data)
+    GlobalData.nodes.add_table_byte(payload_data)
 
 
 def send_request_identity(payload, header):

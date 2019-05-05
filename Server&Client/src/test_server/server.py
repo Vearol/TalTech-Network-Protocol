@@ -11,9 +11,10 @@ from sessions import UserSessions
 from message import UserMessageACK, Message
 from sequences import UserMessageSN
 from nodes import Nodes
-from global_config import packet_types, DEFAULT_DESTINATION, SERVER_KEY, DEFAULT_SERVER_IP, DEFAULT_SERVER_PORT, HEADER_BUFFER
+from global_config import packet_types, SERVER_KEY, DEFAULT_SERVER_IP, DEFAULT_SERVER_PORT, HEADER_BUFFER
 from colors import colors
 from global_data import GlobalData
+from console import Console
 
 
 def listen():
@@ -50,21 +51,8 @@ def listen():
 
 
 def handle_input():
-
-    input_message_prompt = colors.INPUT + 'Enter message, of "file" if send file: ' + colors.TEXT
-    input_file_prompt = colors.INPUT + 'Enter file path: ' + colors.TEXT
-
-    while True:
-        time.sleep(0.5)
-        message = input(input_message_prompt)
-    
-        if (message == 'file'):
-
-            file_path = input(input_file_prompt)
-            Message.send_file(DEFAULT_DESTINATION, file_path)
-            continue
-    
-        Message.send_message(packet_types['screen_message'], DEFAULT_DESTINATION, message.encode())
+    console = Console()
+    console.start()
 
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
