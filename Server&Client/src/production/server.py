@@ -11,7 +11,7 @@ from sessions import UserSessions
 from message import UserMessageACK, Message
 from sequences import UserMessageSN
 from nodes import Nodes
-from global_config import packet_types, DEFAULT_DESTINATION, SERVER_KEY, DEFAULT_SERVER_IP, DEFAULT_SERVER_PORT, HEADER_BUFFER
+from global_config import packet_types, SERVER_KEY, DEFAULT_SERVER_IP, DEFAULT_SERVER_PORT, HEADER_BUFFER
 from colors import colors
 from global_data import GlobalData
 
@@ -51,20 +51,21 @@ def listen():
 
 def handle_input():
 
-    input_message_prompt = colors.INPUT + 'Enter message, of "file" if send file: ' + colors.TEXT
-    input_file_prompt = colors.INPUT + 'Enter file path: ' + colors.TEXT
+    MSG_PROMPT = colors.INPUT + 'Enter message, of "file" if send file: ' + colors.TEXT
+    FILE_PROMPT = colors.INPUT + 'Enter file path: ' + colors.TEXT
+    DEST_PROMPT = colors.INPUT + 'Enter destination id: ' + colors.TEXT
 
     while True:
         time.sleep(0.5)
-        message = input(input_message_prompt)
-    
-        if (message == 'file'):
+        dest = input(DEST_PROMPT)
+        message = input(MSG_PROMPT)
 
-            file_path = input(input_file_prompt)
-            Message.send_file(DEFAULT_DESTINATION, file_path)
+        if (message == 'file'):
+            file_path = input(FILE_PROMPT)
+            Message.send_file(dest, file_path)
             continue
-    
-        Message.send_message(packet_types['screen_message'], DEFAULT_DESTINATION, message.encode())
+
+        Message.send_message(packet_types['screen_message'], dest, message.encode())
 
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
