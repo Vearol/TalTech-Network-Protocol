@@ -148,7 +148,7 @@ def handle_packet(payload):
         return
 
     if packet_type == packet_types['full_table_update']:
-        full_table_update(flag, payload)
+        full_table_update(header.source, header.flag, payload)
         return
 
     if packet_type == packet_types['send_request_identity']:
