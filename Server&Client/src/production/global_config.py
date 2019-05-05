@@ -24,6 +24,11 @@ FILENAME_KEY = 'name'
 FILESIZE_KEY = 'length'
 FILETYPE_KEY = 'content-type'
 
+# send/request identity constants
+ID_KEY = 'ID'
+RESPONCE_KEY = 'responseRequired'
+NAME_KEY = 'name'
+
 # packet constants
 packet_types = {
     'keepalive' : 0,

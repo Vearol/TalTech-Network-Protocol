@@ -214,12 +214,12 @@ class Message:
         packet = []
 
         if (local_sequence_number == sequence_number):
-            packet = create_packet(PROTOCOL_VERSION, packet_type, flag_types['ACK'], SERVER_KEY, DEFAULT_DESTINATION, 0, local_sequence_number, bytes(0))
+            packet = create_packet(PROTOCOL_VERSION, packet_type, flag_types['ACK'], SERVER_KEY, destination, 0, local_sequence_number, bytes(0))
             print(colors.LOG, 'Sending ACK to', destination)
         else:
             missed_sequence_number = sequence_number - local_sequence_number
             
-            packet = create_packet(PROTOCOL_VERSION, packet_type, flag_types['NOT_ACK'], SERVER_KEY, DEFAULT_DESTINATION, 0, missed_sequence_number, bytes(0))
+            packet = create_packet(PROTOCOL_VERSION, packet_type, flag_types['NOT_ACK'], SERVER_KEY, destination, 0, missed_sequence_number, bytes(0))
             print(colors.LOG, 'Sending NOT_ACK to', destination)
 
         with GlobalData.lock:
