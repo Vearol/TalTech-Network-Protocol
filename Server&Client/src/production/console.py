@@ -44,7 +44,7 @@ class Console:
                 count = 1
                 for key, value in nodes_data.items():
                     nickname = value[2]
-                    msg = str(count) + "." + nickname + ":\t" + key
+                    msg = str(count) + ". " + nickname + ":\t" + key
                     print(self.create_msg(msg))
                 print('\n')
                 continue
