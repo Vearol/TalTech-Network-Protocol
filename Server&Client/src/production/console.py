@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 
 import time
+import pprint
 from colors import colors
 from message import Message
 from global_config import packet_types
@@ -14,6 +15,8 @@ class Console:
                            '1. send message\n' + \
                            '2. send file\n' + \
                            '3. show contact list\n' + \
+                           '4. show current routing data\n' + \
+                           '5. show appropriate neighbor of given dest\n' + \
                            ': '
         self.MSG_PROMPT = 'Enter message: '
         self.FILE_PROMPT = 'Enter file path: '
@@ -45,6 +48,24 @@ class Console:
                 for key, value in nodes_data.items():
                     nickname = value[2]
                     msg = str(count) + ". " + nickname + ":\t" + key
+                    print(self.create_msg(msg))
+                print('\n')
+                continue
+
+            if mode == '4':
+                tables = GlobalData.nodes.tables
+                pp = pprint.PrettyPrinter(indent=4)
+                pp.pprint(tables)
+                print('\n')
+                continue
+
+            if mode == '5':
+                dest = input(self.create_msg(self.DEST_PROMPT))
+                neighbor_id = GlobalData.nodes.get_nearest_neighbor(dest)
+                if not neighbor_id:
+                    print(self.create_msg('No appropriate neighbor.'))
+                else:
+                    msg = "Forward to {}".format(neighbor_id)
                     print(self.create_msg(msg))
                 print('\n')
                 continue
