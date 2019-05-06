@@ -16,54 +16,54 @@ def skip_index(payload, packet_type):
     return 0
 
 
-def normal(source, packet_type, sequence_number, payload):
+def normal(header, payload):
     
-    skip = skip_index(payload, packet_type)
-    GlobalData.sessions.add(source, payload[skip:])
+    skip = skip_index(payload, header.packet_type)
+    GlobalData.sessions.add(header.source, payload[skip:])
 
-    Message.send_ACK(packet_type, sequence_number, source)
+    Message.send_ACK(header.packet_type, header.session_id, header.sequence_number, header.source)
 
 
-def first_packet(source, packet_type, sequence_number, payload):
+def first_packet(header, payload):
    
-    GlobalData.sessions.add(source, payload)
+    GlobalData.sessions.add(header.source, payload)
 
-    Message.send_ACK(packet_type, sequence_number, source)
+    Message.send_ACK(header.packet_type, header.session_id, header.sequence_number, header.source)
 
 
-def last_packet(source, packet_type, sequence_number, payload):
+def last_packet(header, payload):
     
-    skip = skip_index(payload, packet_type)
-    GlobalData.sessions.add(source, payload[skip:])
+    skip = skip_index(payload, header.packet_type)
+    GlobalData.sessions.add(header.source, payload[skip:])
 
-    Message.send_ACK(packet_type, sequence_number, source)
+    Message.send_ACK(header.packet_type, header.session_id, header.sequence_number, header.source)
 
 
-def single_packet(packet_type, sequence_number, source):
+def single_packet(header):
    
-    Message.send_ACK(packet_type, sequence_number, source)
+    Message.send_ACK(header.packet_type, header.session_id, header.sequence_number, header.source)
 
 
-def ACK(source, packet_type, sequence_number):
+def ACK(header):
     
-    print(colors.LOG, 'Received ACK from', source)
-    GlobalData.messages.remove(source, sequence_number)
+    print(colors.LOG, 'Received ACK from', header.source)
+    GlobalData.messages.remove(header.source, header.session_id)
     
-    local_sequance_number = GlobalData.messages.get_ack(source)
+    local_sequance_number = GlobalData.messages.get_ack(header.source)
 
     if (sequence_number != local_sequance_number):
         print(colors.ERROR, 'Sequance number missmatch in ACK')
 
 
-def NOT_ACK(source, packet_type, sequence_number):
+def NOT_ACK(header):
 
-    GlobalData.messages.get_ack(source)
+    GlobalData.messages.get_ack(header.source)
 
-    payload = GlobalData.messages.get_packet(source, sequence_number)
+    payload = GlobalData.messages.get_packet(header.source, header.session_id, header.sequence_number)
     if (len(payload) == 0):
         return
 
-    Message.resend_message(packet_type, source, payload)
+    Message.resend_message(header.packet_type, header.session_id, header.source, payload)
 
 
 def error():
@@ -76,32 +76,32 @@ def handle_flag(payload):
     header = GlobalData.header
 
     # add incoming seqance number no matter what
-    GlobalData.sequences.add_in(header.source, len(payload))
+    GlobalData.sequences.add_in(header.source, header.session_id, len(payload))
 
     flag = header.flag
 
     if flag == flag_types['normal']:
-        normal(header.source, header.packet_type, header.sequence_number, payload)
+        normal(header, payload)
         return
 
     if flag == flag_types['first_packet']:
-        first_packet(header.source, header.packet_type, header.sequence_number, payload)
+        first_packet(header, payload)
         return
 
     if flag == flag_types['last_packet']:
-        last_packet(header.source, header.packet_type, header.sequence_number, payload)
+        last_packet(header, payload)
         return
 
     if flag == flag_types['single_packet']:
-        single_packet(header.packet_type, header.sequence_number, header.source)
+        single_packet(header)
         return
 
     if flag == flag_types['ACK']:
-        ACK(header.source, header.packet_type, header.sequence_number)
+        ACK(header)
         return
 
     if flag == flag_types['NOT_ACK']:
-        NOT_ACK(header.source, header.packet_type, header.sequence_number)
+        NOT_ACK(header)
         return
 
     if flag == flag_types['error']:

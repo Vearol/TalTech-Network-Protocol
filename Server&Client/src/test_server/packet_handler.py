@@ -19,7 +19,7 @@ def is_fully_received(flag):
 
 def keep_alive(header):
     
-    GlobalData.messages.send_ACK(header.packet_type, header.seqence_number, header.source)
+    Message.send_ACK(header.packet_type, header.seqence_number, 0, header.source)
 
 
 def route_update(payload):
@@ -100,6 +100,8 @@ def screen_message(header, payload):
     # TODO store in db
     
     print('>', colors.TEXT, message_str)
+    
+    GlobalData.sessions.remove(source)
 
 
 def metadata_message(header, payload):

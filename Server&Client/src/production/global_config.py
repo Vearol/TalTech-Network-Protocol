@@ -51,5 +51,5 @@ flag_types = {
 }
 
 INIT_NODES = {
-        "nodeself": ["127.0.0.1", 8088, "sample_nickname"]
+        "nodeself": ["127.0.0.1", 8080, "sample_nickname"]
 }
