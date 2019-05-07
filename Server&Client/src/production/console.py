@@ -29,17 +29,19 @@ class Console:
             mode = input(self.create_msg(self.MENU_PROMPT))
 
             if mode == '1':
-                dest = input(self.create_msg(self.DEST_PROMPT))
+                dest_nickname = input(self.create_msg(self.DEST_PROMPT))
                 message = input(self.create_msg(self.MSG_PROMPT))
+                dect_key = GlobalData.nodes.get_key_by_nickname(dest_nickname)
                 Message.send_message(packet_types['screen_message'],
-                                     dest,
+                                     dect_key,
                                      message.encode())
                 continue
 
             if mode == '2':
-                dest = input(self.create_msg(self.DEST_PROMPT))
+                dest_nickname = input(self.create_msg(self.DEST_PROMPT))
+                dect_key = GlobalData.nodes.get_key_by_nickname(dest_nickname)
                 file_path = input(self.create_msg(self.FILE_PROMPT))
-                Message.send_file(dest, file_path)
+                Message.send_file(dect_key, file_path)
                 continue
 
             if mode == '3':
@@ -63,8 +65,10 @@ class Console:
                 continue
 
             if mode == '5':
-                dest = input(self.create_msg(self.DEST_PROMPT))
-                neighbor_id = GlobalData.nodes.get_nearest_neighbor(dest)
+                dest_nickname = input(self.create_msg(self.DEST_PROMPT))
+                dect_key = GlobalData.nodes.get_key_by_nickname(dest_nickname)
+
+                neighbor_id = GlobalData.nodes.get_nearest_neighbor(dect_key)
                 if not neighbor_id:
                     print(self.create_msg('No appropriate neighbor.'))
                 else:

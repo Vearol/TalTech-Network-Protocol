@@ -38,16 +38,18 @@ def listen():
             continue
 
         # Forward message
-        destination = GlobalData.header.destination
-        if (destination.lower() != SERVER_KEY.lower()):
+        original_destination = GlobalData.header.destination
+        if (original_destination.lower() != SERVER_KEY.lower()):
+            destination = GlobalData.nodes.get_nearest_neighbor(original_destination)
+
             Message.forward(message_bytes, destination)
             continue
 
         # Payload - next 80 bytes(rest of bytes)
         payload = message_bytes[HEADER_BUFFER:]       
 
-        handle_flag(payload)
-        handle_packet(payload)
+        if (handle_flag(payload)):
+            handle_packet(payload)
 
 
 def handle_input():

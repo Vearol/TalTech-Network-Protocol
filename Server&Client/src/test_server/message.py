@@ -16,62 +16,103 @@ class UserMessageACK:
     def __init__(self):
         self.user_messages = {}
         self.user_acks = {}
+        self.resend_timeouts = {}
     
     # TODO clean this garbage once in a while!!!! in case remove is not called
 
     # track of outcoming messages with time, to check ACK. user_id - destination
-    def add(self, user_id, sequence_number, payload):
+    def add(self, user_id, session_id, sequence_number, packet_type, payload):
         user_id = user_id.lower()
-        if (user_id in self.user_messages.keys()):  
-            self.user_messages[user_id][sequence_number] = [time.time(), payload]
+        if (user_id in self.user_messages.keys()): 
+            if (session_id in self.user_messages[user_id].keys()):
+                self.user_messages[user_id][session_id][sequence_number] = [packet_type, time.time(), payload]
+            else:
+               self.user_messages[user_id][session_id] = { sequence_number : [packet_type, time.time(), payload] }
         else:
-            self.user_messages[user_id] = { sequence_number : [time.time(), payload] }
+            self.user_messages[user_id] = { session_id : { sequence_number : [packet_type, time.time(), payload] } }
 
-    def add_ack(self, user_id, sequence_number):
+
+    def get_packet(self, user_id, session_id, sequence_number):
+        user_id = user_id.lower()
+        if (user_id in self.user_messages.keys()):
+            if (session_id in self.user_messages[user_id].keys()):
+                if (sequence_number in self.user_messages[user_id][session_id].keys()):
+                    message_data = self.user_messages[user_id][session_id][sequence_number]
+                    return (message_data[0], message_data[2])
+                else:
+                    # getting whole session
+                    payload = []
+                    packet_type = 0
+                    if (sequence_number == 0):
+                        for data in self.user_messages[user_id][session_id].values():
+                            payload.append(data[2])
+                            packet_type = data[0]
+
+                        return (packet_type, payload)
+
+                    return (0, [])    
+            else:
+                log = 'Cannot find packet with session id: ' + str(session_id) + ' for user: ' + user_id
+                print(colors.ERROR, log)
+                return (0, [])
+        else:
+            log = 'Cannot find any packet for user: ' + user_id
+            print(colors.ERROR, log)
+            return (0, [])
+
+
+    def get_pending_sessions(self, user_id):
+        now = time.time()
+        if (user_id in self.resend_timeouts.keys() and now - self.resend_timeouts[user_id] < RESEND_TIMEOUT_SEC):
+            return []
+
+        self.resend_timeouts[user_id] = now
+
+        pending_sessions = []
+        for key, value in self.user_acks[user_id].items():
+            if not value.empty():
+                pending_sessions.append(key)
+
+        return pending_sessions
+
+
+    def add_ack(self, user_id, session_id, sequence_number):
         user_id = user_id.lower()
         if (user_id not in self.user_acks.keys()):  
-            self.user_acks[user_id] = Queue()
+            self.user_acks[user_id] = { session_id : Queue() }
 
-        self.user_acks[user_id].put(sequence_number)
+        if (session_id not in self.user_acks[user_id].keys()):  
+            self.user_acks[user_id][session_id] = Queue()
+
+        self.user_acks[user_id][session_id].put(sequence_number)
 
 
-    def get_ack(self, user_id):
+    def get_ack(self, user_id, session_id):
         user_id = user_id.lower()
         if (user_id not in self.user_acks.keys()):
             log = 'Cannot find user ' + user_id + ' in ACK queue'
             print(colors.ERROR, log)
             return -1
 
-        if (self.user_acks[user_id].empty()):
-            log = 'No pending ACKs for ' + user_id
+        if (session_id not in self.user_acks[user_id].keys()):
+            log = 'Cannot find session ' + str(session_id) + ' for user ' + user_id + ' in ACK queue'
             print(colors.ERROR, log)
             return -1
 
-        return self.user_acks[user_id].get()
+        if (self.user_acks[user_id][session_id].empty()):
+            log = 'No pending ACKs for ' + user_id + ' in session ' + str(session_id)
+            print(colors.ERROR, log)
+            return -1
+
+        return self.user_acks[user_id][session_id].get()
 
 
-    def get_packet(self, user_id, sequence_number):
+    # remove from tracking, when ACK
+    def remove(self, user_id, session_id):
         user_id = user_id.lower()
         if (user_id in self.user_messages.keys()):
-            if (sequence_number in self.user_messages[user_id].keys()):
-                return self.user_messages[user_id][sequence_number][1]
-            
-            else:
-                log = 'Cannot find packet with seq.number: ' + str(sequence_number) + ' for user: ' + user_id
-                print(colors.ERROR, log)
-                return []
-        else:
-            log = 'Cannot find any packet for user: ' + user_id
-            print(colors.ERROR, log)
-            return []
-
-
-    # remove from tracking, when 
-    def remove(self, user_id, sequence_number):
-        user_id = user_id.lower()
-        if (user_id in self.user_messages.keys()):  
-            self.user_messages[user_id].pop(sequence_number)
-
+            if (session_id in self.user_messages[user_id].keys()):
+                self.user_messages[user_id].pop(session_id)
 
 
 class Message:
@@ -90,17 +131,16 @@ class Message:
         if (size > PAYLOAD_BUFFER):
             flag = flag_types['first_packet']
         else:
-            GlobalData.sequences.add_out(destination, size)
-            sequence_number = GlobalData.sequences.get_out(destination)
+            GlobalData.sequences.add_out(destination, session_id, size)
+            sequence_number = GlobalData.sequences.get_out(destination, session_id)
         
             packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload)
 
             with GlobalData.lock:
                 GlobalData.sock.sendto(packet, (ip, port))
-                # GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
-
-            GlobalData.messages.add(destination, sequence_number, payload)
-            GlobalData.messages.add_ack(destination, sequence_number)
+            
+            GlobalData.messages.add(destination, session_id, sequence_number, packet_type, payload)
+            GlobalData.messages.add_ack(destination, session_id, sequence_number)
 
             return
 
@@ -110,33 +150,32 @@ class Message:
             range_from = i * PAYLOAD_BUFFER
             range_to = range_from + PAYLOAD_BUFFER
 
-            GlobalData.sequences.add_out(destination, PAYLOAD_BUFFER)
-            sequence_number = GlobalData.sequences.get_out(destination)
+            GlobalData.sequences.add_out(destination, session_id, PAYLOAD_BUFFER)
+            sequence_number = GlobalData.sequences.get_out(destination, session_id)
 
             packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload[range_from:range_to])
 
             with GlobalData.lock:
                 GlobalData.sock.sendto(packet, (ip, port))
-                # GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
 
             flag = flag_types['normal']
-            GlobalData.messages.add(destination, sequence_number, payload[range_from:range_to])
-            GlobalData.messages.add_ack(destination, sequence_number)
+            GlobalData.messages.add(destination, session_id, sequence_number, packet_type, payload[range_from:range_to])
+            GlobalData.messages.add_ack(destination, session_id, sequence_number)
 
         flag = flag_types['last_packet']
 
         data_sent = PAYLOAD_BUFFER * chunks
 
-        GlobalData.sequences.add_out(destination, size - data_sent)
-        sequence_number = GlobalData.sequences.get_out(destination)
+        GlobalData.sequences.add_out(destination, session_id, size - data_sent)
+        sequence_number = GlobalData.sequences.get_out(destination, session_id)
 
         packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload[data_sent:])
 
         with GlobalData.lock:
             GlobalData.sock.sendto(packet, (ip, port))
 
-        GlobalData.messages.add(destination, sequence_number, payload[data_sent:])
-        GlobalData.messages.add_ack(destination, sequence_number)
+        GlobalData.messages.add(destination, session_id, sequence_number, packet_type, payload[data_sent:])
+        GlobalData.messages.add_ack(destination, session_id, sequence_number)
 
 
     # sending files
@@ -167,17 +206,16 @@ class Message:
 
         while (file_data):
 
-            GlobalData.sequences.add_out(destination, len(data))
-            sequence_number = GlobalData.sequences.get_out(destination)
+            GlobalData.sequences.add_out(destination, session_id, len(data))
+            sequence_number = GlobalData.sequences.get_out(destination, session_id)
 
             packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, data)
             
             with GlobalData.lock:
                 GlobalData.sock.sendto(packet, (ip, port))
-                # GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
 
-            GlobalData.messages.add(destination, sequence_number, data)
-            GlobalData.messages.add_ack(destination, sequence_number)     
+            GlobalData.messages.add(destination, session_id, sequence_number, packet_type, data)
+            GlobalData.messages.add_ack(destination, session_id, sequence_number)     
             
             file_data = file_to_send.read(PAYLOAD_BUFFER - METADATA_HEADER)
             data = number_to_bytes(0, METADATA_HEADER) + file_data
@@ -190,42 +228,109 @@ class Message:
         file_to_send.close()
 
 
-    # resend lost packets
+    # resend single message
     @staticmethod
-    def resend_message(packet_type, destination, payload):
-
-        flag = flag_types['single_packet']
-
-        sequence_number = GlobalData.sequences.get_out(destination)
-        
-        packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, 0, sequence_number, payload)
+    def resend_message(packet_type, session_id, destination, payload, whole_session=False):
 
         ip, port = GlobalData.nodes.get_network_info(destination)
+
+        if (whole_session):
+            packets_count = len(payload)
+
+            if (packets_count > 1):
+                flag = flag_types['first_packet']
+                sequence_number = 0
+
+                for packet in range(packets_count - 1):
+                    data = payload[packet]
+                    sequence_number += len(data)
+                    packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, data)
+
+                    with GlobalData.lock:
+                        GlobalData.sock.sendto(packet, (ip, port))
+                    
+                    flag = flag_types['normal']
+                
+                flag = flag_types['last_packet']
+                data = payload[packets_count - 1]
+                sequence_number += len(data)
+                packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, data)
+
+                with GlobalData.lock:
+                    GlobalData.sock.sendto(packet, (ip, port))
+            
+                return
+            
+            payload = payload[0]
+
+        
+        flag = flag_types['single_packet']
+
+        sequence_number = GlobalData.sequences.get_out(destination, session_id)
+        
+        packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload)
+
         with GlobalData.lock:
             GlobalData.sock.sendto(packet, (ip, port))
+
+
+    # resend all unacknowledged messages
+    @staticmethod
+    def resend_pending_messages(destination):
+        pending_sessions = GlobalData.messages.get_pending_sessions(destination)
+
+        for session_id in pending_sessions:
+            packet_type, payload = GlobalData.messages.get_packet(destination, session_id, 0)
+
+            Message.resend_message(packet_type, session_id, destination, payload, True)
 
 
     # ACK message
     @staticmethod
-    def send_ACK(packet_type, sequence_number, destination):
+    def send_ACK(packet_type, session_id, sequence_number, destination):
 
-        local_sequence_number = GlobalData.sequences.get_in(destination)
+        local_session_id = GlobalData.sessions.get_income_session(destination)
+        local_sequence_number = GlobalData.sequences.get_in(destination, local_session_id)
+
+        ip, port = GlobalData.nodes.get_network_info(destination)
 
         packet = []
 
-        if (local_sequence_number == sequence_number):
-            packet = create_packet(PROTOCOL_VERSION, packet_type, flag_types['ACK'], SERVER_KEY, destination, 0, local_sequence_number, bytes(0))
+        if (local_session_id == session_id and local_sequence_number == sequence_number):
+            packet = create_packet(PROTOCOL_VERSION, packet_type, flag_types['ACK'], SERVER_KEY, destination, 
+                                   session_id, local_sequence_number, bytes(0))
             print(colors.LOG, 'Sending ACK to', destination)
-        else:
+            
+            with GlobalData.lock:
+                GlobalData.sock.sendto(packet, (ip, port))
+            return
+        
+        if (local_session_id == session_id and local_sequence_number != sequence_number):
             missed_sequence_number = sequence_number - local_sequence_number
             
-            packet = create_packet(PROTOCOL_VERSION, packet_type, flag_types['NOT_ACK'], SERVER_KEY, destination, 0, missed_sequence_number, bytes(0))
+            packet = create_packet(PROTOCOL_VERSION, packet_type, flag_types['NOT_ACK'], SERVER_KEY, destination, 
+                                   session_id, missed_sequence_number, bytes(0))
             print(colors.LOG, 'Sending NOT_ACK to', destination)
+            
+            with GlobalData.lock:
+                GlobalData.sock.sendto(packet, (ip, port))
+            return
 
+        packet = create_packet(PROTOCOL_VERSION, packet_type, flag_types['ACK'], SERVER_KEY, destination, 
+                               session_id, sequence_number, bytes(0))
+        log = 'Sending ACK of missed session ' + str(session_id) + ', seq.num: ' + str(sequence_number) + ' to ' + destination
+        print(colors.LOG, log)
+            
         with GlobalData.lock:
-            ip, port = GlobalData.nodes.get_network_info(destination)
             GlobalData.sock.sendto(packet, (ip, port))
-            # GlobalData.sock.sendto(packet, (DEFAULT_DEST_IP, DEFAULT_DEST_PORT))
+
+        if (local_session_id != session_id):
+            packet = create_packet(PROTOCOL_VERSION, packet_type, flag_types['NOT_ACK'], SERVER_KEY, destination, 
+                                   0, 0, bytes(0))
+            print(colors.LOG, 'Sending NOT_ACK to', destination)
+            
+            with GlobalData.lock:
+                GlobalData.sock.sendto(packet, (ip, port))
 
 
     # Forwarding
