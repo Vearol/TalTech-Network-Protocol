@@ -48,6 +48,7 @@ def number_to_bytes(value, size):
     
     return byte_arr
 
+
 def GPG_to_bytes(key):
     return bytearray(binascii.unhexlify(key.encode()))
 

@@ -49,21 +49,22 @@ def ACK(header):
     print(colors.LOG, 'Received ACK from', header.source)
     GlobalData.messages.remove(header.source, header.session_id)
     
-    local_sequance_number = GlobalData.messages.get_ack(header.source)
+    local_sequance_number = GlobalData.messages.get_ack(header.source, header.session_id)
 
-    if (sequence_number != local_sequance_number):
+    if (header.sequence_number != local_sequance_number):
         print(colors.ERROR, 'Sequance number missmatch in ACK')
 
 
 def NOT_ACK(header):
 
-    GlobalData.messages.get_ack(header.source)
+    if (header.sequence_number != 0):
+        packet_type, payload = GlobalData.messages.get_packet(header.source, header.session_id, header.sequence_number)
+        if (len(payload) == 0):
+            return
 
-    payload = GlobalData.messages.get_packet(header.source, header.session_id, header.sequence_number)
-    if (len(payload) == 0):
-        return
-
-    Message.resend_message(header.packet_type, header.session_id, header.source, payload)
+        Message.resend_message(header.packet_type, header.session_id, header.source, payload, True)
+    else:
+        Message.resend_pending_messages(header.source)
 
 
 def error():
@@ -78,33 +79,37 @@ def handle_flag(payload):
     # add incoming seqance number no matter what
     GlobalData.sequences.add_in(header.source, header.session_id, len(payload))
 
+    # inc session if new message:
+    if (header.flag == flag_types['first_packet'] or header.flag == flag_types['single_packet']):
+        GlobalData.sessions.new_income_session(header.source)
+
     flag = header.flag
 
     if flag == flag_types['normal']:
         normal(header, payload)
-        return
+        return False
 
     if flag == flag_types['first_packet']:
         first_packet(header, payload)
-        return
+        return False
 
     if flag == flag_types['last_packet']:
         last_packet(header, payload)
-        return
+        return True
 
     if flag == flag_types['single_packet']:
         single_packet(header)
-        return
+        return True
 
     if flag == flag_types['ACK']:
         ACK(header)
-        return
+        return False
 
     if flag == flag_types['NOT_ACK']:
         NOT_ACK(header)
-        return
+        return False
 
     if flag == flag_types['error']:
         error()
-        return
+        return False
 

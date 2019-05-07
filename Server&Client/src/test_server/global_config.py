@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 
-SERVER_KEY = 'AC3C905F1239362C'
+SERVER_KEY = 'ac3c905f1239362c'
 PROTOCOL_VERSION = 0
 
 DEFAULT_DESTINATION = 'F0DC905F05793A3C'
@@ -49,3 +49,10 @@ flag_types = {
     'NOT_ACK' : 6,
     'error' : 7
 }
+
+INIT_NODES = {
+        SERVER_KEY: ["127.0.0.1", DEFAULT_SERVER_PORT, "self"],
+        "f0dc905f05793a3c": ["127.0.0.1", 8080, "t"]
+}
+
+RESEND_TIMEOUT_SEC = 5

@@ -10,13 +10,6 @@ from files import parse_file_metadata
 from colors import colors
 
 
-def is_fully_received(flag):
-
-    if (flag == flag_types['normal'] or flag == flag_types['first_packet']):
-        return False
-
-    return True
-
 def keep_alive(header):
     
     Message.send_ACK(header.packet_type, header.seqence_number, 0, header.source)
@@ -38,9 +31,6 @@ def full_table_request(destination):
 
 
 def full_table_update(source, flag, payload):
-   
-    if (not is_fully_received(header.flag)):
-        return
 
     print(colors.LOG, 'full table update message')
 
@@ -82,10 +72,6 @@ def screen_message(header, payload):
     
     source = header.source
 
-    # still incoming...
-    if (not is_fully_received(header.flag)):
-        return
-
     print(colors.INCOME, 'message for screen from', source)
 
     if (header.flag == flag_types['single_packet']):
@@ -105,14 +91,6 @@ def screen_message(header, payload):
 
 
 def metadata_message(header, payload):
-
-    if (header.flag == flag_types['ACK']):
-        return
-
-    # still incoming...
-    if (not is_fully_received(header.flag)):
-        print(colors.LOG, 'File incoming...')
-        return
 
     source = header.source
     
@@ -149,9 +127,6 @@ def metadata_message(header, payload):
 def handle_packet(payload):
     
     header = GlobalData.header
-
-    if (header.flag == flag_types['ACK'] or header.flag == flag_types['NOT_ACK']):
-        return
 
     packet_type = header.packet_type
 

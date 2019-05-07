@@ -4,7 +4,7 @@ from byte_parser import set_bits, number_to_bytes, GPG_to_bytes
 from global_config import HEADER_BUFFER
 
 
-def create_header(protocol_version, packet_type, flag, source, destination, sessionId, sequence_number):
+def create_header(protocol_version, packet_type, flag, source, destination, session_id, sequence_number):
     
     header = bytearray(HEADER_BUFFER)
     #byte 0        -- protocol version,packet type, flags
@@ -25,7 +25,7 @@ def create_header(protocol_version, packet_type, flag, source, destination, sess
     header[9:17] = GPG_to_bytes(destination)
 
     #byte 17       -- sessionID, identify flow between endpoints
-    header[17] = sessionId
+    header[17] = session_id
 
     #byte 18..19   -- sequence number
     header[18:20] = number_to_bytes(sequence_number, 2)
@@ -33,11 +33,11 @@ def create_header(protocol_version, packet_type, flag, source, destination, sess
     return header
 
 
-def create_packet(protocol_version, packet_type, flag, source, destination, sessionId, sequence_number, payload):
+def create_packet(protocol_version, packet_type, flag, source, destination, session_id, sequence_number, payload):
     
     packet = bytearray(HEADER_BUFFER + 1)
 
-    packet[0:HEADER_BUFFER] = create_header(protocol_version, packet_type, flag, source, destination, sessionId, sequence_number)
+    packet[0:HEADER_BUFFER] = create_header(protocol_version, packet_type, flag, source, destination, session_id, sequence_number)
     packet[HEADER_BUFFER:] = payload
 
     return packet

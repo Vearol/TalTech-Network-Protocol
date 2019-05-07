@@ -13,7 +13,10 @@ class UserMessageSN:
         user_id = user_id.lower()
 
         if (user_id in self.out_message_sn.keys()):  
-            self.out_message_sn[user_id][session_id] += sequence_number
+            if (session_id in self.out_message_sn[user_id].keys()):
+                self.out_message_sn[user_id][session_id] += sequence_number
+            else:
+                self.out_message_sn[user_id][session_id] = sequence_number
         else:
             self.out_message_sn[user_id] = { session_id : sequence_number }
 
@@ -23,12 +26,13 @@ class UserMessageSN:
 
     def get_out(self, user_id, session_id):
 
-        key = user_id.lower()
+        user_id = user_id.lower()
 
-        if (key in self.out_message_sn.keys()):
-            return self.out_message_sn[key][session_id]
+        if (user_id in self.out_message_sn.keys()):
+            if (session_id in self.out_message_sn[user_id].keys()):
+                return self.out_message_sn[user_id][session_id]
         
-        return 0
+        return -1
     
 
     def add_in(self, user_id, session_id, sequence_number):
@@ -36,19 +40,23 @@ class UserMessageSN:
         user_id = user_id.lower()
         
         if (user_id in self.in_message_sn.keys()):  
-            self.in_message_sn[user_id][session_id] += sequence_number
+            if (session_id in self.in_message_sn[user_id].keys()):
+                self.in_message_sn[user_id][session_id] += sequence_number
+            else:
+                self.in_message_sn[user_id][session_id] = sequence_number
         else:
             self.in_message_sn[user_id] = { session_id : sequence_number }
 
-        if (self.in_message_sn[user_id] > MAX_SN):
-                self.in_message_sn[user_id] -= MAX_SN
+        if (self.in_message_sn[user_id][session_id] > MAX_SN):
+                self.in_message_sn[user_id][session_id] -= MAX_SN
 
 
     def get_in(self, user_id, session_id):
 
-        key = user_id.lower()
+        user_id = user_id.lower()
 
-        if (key in self.in_message_sn.keys()):
-            return self.in_message_sn[key][session_id]
+        if (user_id in self.in_message_sn.keys()):
+            if (session_id in self.in_message_sn[user_id].keys()):
+                return self.in_message_sn[user_id][session_id]
         
-        return 0
+        return -1

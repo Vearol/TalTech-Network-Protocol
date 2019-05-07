@@ -1,12 +1,13 @@
 #! /usr/bin/python3
 
 
-from global_config import INIT_NODES
+from global_config import INIT_NODES, SERVER_KEY
+from colors import colors
 
 
 class Nodes:
 
-    def __init__(self, host_id='nodeself'):
+    def __init__(self, host_id=SERVER_KEY):
         self.host_id = host_id
         self.tables = [{host_id: {host_id: 0}}]
         self.nodes_data = INIT_NODES
@@ -17,7 +18,17 @@ class Nodes:
         self.nodes_data[key][0] = ip
         self.nodes_data[key][1] = port
 
+    def get_key_by_nickname(self, nickname):
+        for key, value in self.nodes_data.items():
+            if value[2] == nickname:
+                return key
+        
+        log = "Not able to find GPG key for nickname: " + nickname
+        print(colors.ERROR, log)
+        return None
+
     def get_network_info(self, key):
+        key = key.lower()
         if key in self.nodes_data.keys():
             ip = self.nodes_data[key][0]
             port = self.nodes_data[key][1]

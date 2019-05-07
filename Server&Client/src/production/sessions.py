@@ -8,6 +8,9 @@ class UserSessions:
         # data from incoming messages. source : [payload]
         self.user_data = {}
 
+        # track of incomming messages sessions
+        self.income_sessions = {}
+
         # track of outcoming session autoincrement
         self.user_sessions = {}
     
@@ -61,3 +64,27 @@ class UserSessions:
         
         if (user_id in self.user_data.keys()):  
             return self.user_data[user_id]
+
+
+    # increment session with new message
+    def new_income_session(self, user_id):
+        if (user_id in self.income_sessions.keys()):
+            next_session = self.income_sessions[user_id] + 1
+            if (next_session > MAX_SESSION):
+                next_session -= MAX_SESSION
+            
+            self.income_sessions[user_id] = next_session
+        else:
+            self.income_sessions[user_id] = 1
+        
+        return self.income_sessions[user_id]
+    
+
+    # return current income message session value for a user
+    def get_income_session(self, user_id):
+        if (user_id in self.income_sessions.keys()):
+            return self.income_sessions[user_id]
+        else:
+            self.income_sessions[user_id] = 1
+        
+        return 1

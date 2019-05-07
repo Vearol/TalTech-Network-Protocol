@@ -44,7 +44,7 @@ class Header_Parser:
 
         # byte 17       -- sessionID, identify flow between endpoints
         byte17 = header_bytes[17]
-        self.session_Id = byte17
+        self.session_id = byte17
 
         # byte 18..19   -- sequence number
         byte18_19 = header_bytes[18:20]
