@@ -13,10 +13,12 @@ class TestNodes(unittest.TestCase):
     def test_add_table_byte(self):
         nodes = Nodes()
         EXPECTED = [{"nodeself": {"nodeself": 0}},
-                    {"BBBBBBBB": {"BBBBBBBB": 1}}]
-        ARG1 = bytearray("\x42\x42\x42\x42\x42\x42\x42\x42\x30\x30")
-        ARG2 = 1
-        nodes.add_table_byte(ARG1, ARG2)
+                    {"BBBBBBBB": {"BBBBBBBB": 1,
+                                  "CCCCCCCC": 2}}]
+        ARG1 = "BBBBBBBB"
+        ARG2 = bytearray("\x43\x43\x43\x43\x43\x43\x43\x43\x30\x31")
+        ARG3 = 1
+        nodes.add_table_byte(ARG1, ARG2, ARG3)
         actual = nodes.tables
         self.assertEqual(EXPECTED, actual)
 
