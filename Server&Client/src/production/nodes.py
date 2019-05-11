@@ -50,7 +50,22 @@ class Nodes:
         if key in self.nodes_data.keys():
             return self.nodes_data[key][2]
 
+    def is_updated(self, src_id, table_byte, cost=0):
+        table = self.byte_to_table(table_byte, cost)
+        if table in self.tables:
+            return True
+        else:
+            return False
+
+    def update_table(self, src_id, table_byte, cost=0):
+        self.remove_table(src_id)
+        self.add_table_byte(table_byte, cost=0)
+
     def add_table_byte(self, table_byte, cost=0):
+        table = self.byte_to_table(table_byte, cost)
+        self.tables.append(table)
+
+    def byte_to_table(self, table_byte, cost=0):
         array = []
         table = {}
         table_key = ''
@@ -60,10 +75,12 @@ class Nodes:
         for a in array:
             key = a[:8]
             value = int(a[9:])
+            if value == 65535:
+                continue
             table[key] = value + cost
             if value == 0:
                 table_key = key
-        self.tables.append({table_key: table})
+        return {table_key: table}
 
     def remove_table(self, src_id):
         for idx, table in enumerate(self.tables):
