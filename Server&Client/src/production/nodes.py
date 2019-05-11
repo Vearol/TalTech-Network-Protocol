@@ -50,6 +50,10 @@ class Nodes:
         if key in self.nodes_data.keys():
             return self.nodes_data[key][2]
 
+    def update_table(self, src_id, table_byte, cost=0):
+        self.remove_table(src_id)
+        self.add_table_byte(table_byte, cost=0)
+
     def add_table_byte(self, table_byte, cost=0):
         array = []
         table = {}
