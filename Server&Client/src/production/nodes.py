@@ -22,10 +22,16 @@ class Nodes:
         for key, value in self.nodes_data.items():
             if value[2] == nickname:
                 return key
-        
+
         log = "Not able to find GPG key for nickname: " + nickname
         print(colors.ERROR, log)
         return None
+
+    def get_neighbors(self):
+        keys = []
+        for key in self.nodes_data.keys():
+            keys.append(key)
+        return keys
 
     def get_network_info(self, key):
         key = key.lower()
@@ -36,7 +42,6 @@ class Nodes:
         else:
             return (None, None)
 
-
     def set_nickname(self, key, nickname):
         if key in self.nodes_data.keys():
             self.nodes_data[key][2] = nickname
@@ -45,7 +50,22 @@ class Nodes:
         if key in self.nodes_data.keys():
             return self.nodes_data[key][2]
 
+    def is_updated(self, src_id, table_byte, cost=0):
+        table = self.byte_to_table(table_byte, cost)
+        if table in self.tables:
+            return True
+        else:
+            return False
+
+    def update_table(self, src_id, table_byte, cost=0):
+        self.remove_table(src_id)
+        self.add_table_byte(table_byte, cost=0)
+
     def add_table_byte(self, table_byte, cost=0):
+        table = self.byte_to_table(table_byte, cost)
+        self.tables.append(table)
+
+    def byte_to_table(self, table_byte, cost=0):
         array = []
         table = {}
         table_key = ''
@@ -55,10 +75,12 @@ class Nodes:
         for a in array:
             key = a[:8]
             value = int(a[9:])
+            if value == 65535:
+                continue
             table[key] = value + cost
             if value == 0:
                 table_key = key
-        self.tables.append({table_key: table})
+        return {table_key: table}
 
     def remove_table(self, src_id):
         for idx, table in enumerate(self.tables):

@@ -46,10 +46,13 @@ class Console:
 
             if mode == '3':
                 nodes_data = GlobalData.nodes.nodes_data
-                count = 1
+                cnt = 1
                 for key, value in nodes_data.items():
+                    ip = value[0]
+                    if not ip:
+                        ip = "Non-neighbor node"
                     nickname = value[2]
-                    msg = str(count) + ". " + nickname + ":\t" + key
+                    msg = str(cnt) + ". " + nickname + ":\t" + key + "\t" + ip
                     print(self.create_msg(msg))
                 print('\n')
                 continue
