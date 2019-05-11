@@ -21,7 +21,7 @@ class Header_Parser:
 
     def parse(self, header_bytes):
         
-        # byte 0        -- protocol version,packet type, flags
+        # byte 0        -- protocol version, packet type, flags
         byte0 = header_bytes[0]
 
         flag_bits = 3

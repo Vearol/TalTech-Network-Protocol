@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#! /usr/bin/python3"127.0.0.1"
 
 SERVER_KEY = 'ac3c905f1239362c'
 PROTOCOL_VERSION = 0
@@ -36,6 +36,7 @@ packet_types = {
     'full_table_request' : 2,
     'full_table_update' : 3,
     'send_request_identity' : 4,
+    'group_message' : 5,
     'screen_message' : 6,
     'metadata_message' : 7
 }
@@ -51,7 +52,7 @@ flag_types = {
 }
 
 INIT_NODES = {
-        SERVER_KEY: ["127.0.0.1", DEFAULT_SERVER_PORT, "self"],
+        SERVER_KEY: [DEFAULT_SERVER_IP, DEFAULT_SERVER_PORT, "self"],
         "f0dc905f05793a3c": ["127.0.0.1", 8080, "t"]
 }
 

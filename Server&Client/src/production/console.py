@@ -32,16 +32,24 @@ class Console:
                 dest_nickname = input(self.create_msg(self.DEST_PROMPT))
                 message = input(self.create_msg(self.MSG_PROMPT))
                 dect_key = GlobalData.nodes.get_key_by_nickname(dest_nickname)
+                if (dect_key == None): 
+                    print(colors.ERROR, "No such node in contacts")
+                    continue
+                neighbor_id = GlobalData.nodes.get_nearest_neighbor(dect_key)
                 Message.send_message(packet_types['screen_message'],
-                                     dect_key,
+                                     neighbor_id,
                                      message.encode())
                 continue
 
             if mode == '2':
                 dest_nickname = input(self.create_msg(self.DEST_PROMPT))
                 dect_key = GlobalData.nodes.get_key_by_nickname(dest_nickname)
+                if (dect_key == None): 
+                    print(colors.ERROR, "No such node in contacts")
+                    continue
+                neighbor_id = GlobalData.nodes.get_nearest_neighbor(dect_key)
                 file_path = input(self.create_msg(self.FILE_PROMPT))
-                Message.send_file(dect_key, file_path)
+                Message.send_file(neighbor_id, file_path)
                 continue
 
             if mode == '3':
@@ -67,6 +75,9 @@ class Console:
             if mode == '5':
                 dest_nickname = input(self.create_msg(self.DEST_PROMPT))
                 dect_key = GlobalData.nodes.get_key_by_nickname(dest_nickname)
+                if (dect_key == None): 
+                    print(colors.ERROR, "No such node in contacts")
+                    continue
 
                 neighbor_id = GlobalData.nodes.get_nearest_neighbor(dect_key)
                 if not neighbor_id:

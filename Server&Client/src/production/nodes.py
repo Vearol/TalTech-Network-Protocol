@@ -1,8 +1,8 @@
 #! /usr/bin/python3
 
-
 from global_config import INIT_NODES, SERVER_KEY
 from colors import colors
+from byte_parser import bytes_to_number, bytes_to_GPG
 
 
 class Nodes:
@@ -11,6 +11,7 @@ class Nodes:
         self.host_id = host_id
         self.tables = [{host_id: {host_id: 0}}]
         self.nodes_data = INIT_NODES
+        self.nicknames = {}
 
     def set_network_info(self, key, ip, port):
         if key not in self.nodes_data.keys():
@@ -30,8 +31,22 @@ class Nodes:
     def get_neighbors(self):
         keys = []
         for key in self.nodes_data.keys():
-            keys.append(key)
+            if (key != SERVER_KEY):
+                keys.append(key)
         return keys
+
+    def get_all_nodes(self):
+        all_nodes = []
+        for table in self.tables:
+            for node in table.keys():
+                if node not in all_nodes:
+                    all_nodes.append(node)
+
+            for node in table.values():
+                if node not in all_nodes:
+                    all_nodes.append(node)
+
+        return all_nodes
 
     def get_network_info(self, key):
         key = key.lower()
@@ -45,10 +60,22 @@ class Nodes:
     def set_nickname(self, key, nickname):
         if key in self.nodes_data.keys():
             self.nodes_data[key][2] = nickname
+        self.nicknames[key] = nickname
 
     def get_nickname(self, key):
         if key in self.nodes_data.keys():
             return self.nodes_data[key][2]
+        if key in self.nicknames.keys():
+            return self.nicknames[key]
+        return ""
+
+    def get_unknown_nodes(self):
+        all_nodes = self.get_all_nodes()
+        unknown_nodes = []
+        for node in all_nodes:
+            if (self.get_nickname(node) == ""):
+                unknown_nodes.append(node)
+        return unknown_nodes
 
     def is_updated(self, src_id, table_byte, cost=0):
         table = self.byte_to_table(table_byte, cost)
@@ -70,11 +97,11 @@ class Nodes:
         table = {}
         table_key = ''
         table_str = table_byte.decode()
-        for x in range(len(table_str) / 10):
+        for x in range(int(len(table_str) / 10)):
             array.append(table_str[:10])
         for a in array:
-            key = a[:8]
-            value = int(a[9:])
+            key = bytes_to_GPG(a[:8])
+            value = bytes_to_number(a[8:])
             if value == 65535:
                 continue
             table[key] = value + cost
@@ -111,6 +138,9 @@ class Nodes:
         return full_table
 
     def get_nearest_neighbor(self, dest_id):
+        if (dest_id in self.nodes_data.keys()):
+            return dest_id
+
         tables = self.tables
         key = ''
         min_cost = float('inf')

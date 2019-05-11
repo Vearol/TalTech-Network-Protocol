@@ -5,25 +5,39 @@ import json
 from global_config import packet_types, flag_types, FILENAME_KEY, FILESIZE_KEY, SERVER_KEY, ID_KEY, RESPONCE_KEY, NAME_KEY
 from global_data import GlobalData
 from message import Message
-from byte_parser import bytes_to_number
-from files import parse_file_metadata
+from byte_parser import bytes_to_number, bytes_to_GPG, number_to_bytes
+from json_parser import parse_file_metadata, generate_identity_bytes
 from colors import colors
 
 
 def keep_alive(header):
     
-    Message.send_ACK(header.packet_type, header.seqence_number, 0, header.source)
+    Message.send_ACK(header.packet_type, header.seqence_number, header.session_id, header.source)
 
 
-def route_update(payload):
-   
-    print(colors.LOG, 'route update message')
-    # do something
+def route_update(header, payload):
+    
+    log = 'Route update from: ' + str(header.source)
+    print(colors.LOG, log)
+
+    if (GlobalData.nodes.is_updated(header.source, payload)):
+        GlobalData.nodes.update_table(header.source, payload)
+        
+        updated_node = bytes_to_GPG(payload[0:8])
+        updated_cost = bytes_to_number(payload[8:10])
+        payload[8:10] = number_to_bytes(updated_cost + 1, 2)
+        
+        neighbors = GlobalData.nodes.get_neighbors()
+        Message.send_message_to_group(packet_types['route_update'], neighbors, payload)
+
+        if (GlobalData.nodes.get_nickname(updated_node) == ""):
+            Message.send_identity_request(updated_node)
 
 
 def full_table_request(destination):
     
-    print(colors.LOG, 'request full active routing table message')
+    log = str(destination) + ' requested full routing table'
+    print(colors.LOG, log)
     # TODO check data format
     payload = GlobalData.nodes.get_full_table_byte()
 
@@ -31,12 +45,13 @@ def full_table_request(destination):
 
 
 def full_table_update(source, flag, payload):
-
-    print(colors.LOG, 'full table update message')
+    
+    log = 'Full table update from: ' + str(source)
+    print(colors.LOG, log)
 
     GlobalData.nodes.remove_table(source)
 
-    if (header.flag == flag_types['single_packet']):
+    if (flag == flag_types['single_packet']):
         GlobalData.nodes.add_table_byte(payload)
         return
     
@@ -44,28 +59,39 @@ def full_table_update(source, flag, payload):
 
     GlobalData.nodes.add_table_byte(payload_data)
 
+    new_nodes = GlobalData.nodes.get_unknown_nodes()
+    for node in new_nodes:
+        Message.send_identity_request(node)
 
-def send_request_identity(payload, header):
-    
+
+def send_request_identity(header, payload):
+
     identity_data = json.load(payload.decode())
 
     GlobalData.nodes.set_nickname(header.source, identity_data[NAME_KEY])
 
+    log = 'Received identity of ' + str(header.source) + ': ' + str(identity_data[NAME_KEY])
+    print(colors.LOG, log)
+
     responce_required = bool(identity_data[RESPONCE_KEY])
     if (responce_required):
 
-        server_name = GlobalData.nodes.get_nickname(SERVER_KEY)
+        server_identity = generate_identity_bytes('false')
 
-        server_data = {
-            ID_KEY : SERVER_KEY,
-            RESPONCE_KEY : 'false',
-            NAME_KEY : server_name
-        }
+        GlobalData.messages.send_message(header.packet_type, header.source, server_identity)
 
-        server_data_bytes = json.dumps(server_data).encode()
 
-        GlobalData.messages.send_message(header.packet_type, header.source, server_data_bytes)
+def group_message(header, payload):
+    source = header.source
 
+    print(colors.INCOME, 'group message from', source)
+
+    if (header.flag == flag_types['single_packet']):
+        
+        message_str = payload.decode('utf-8')    
+        print('>', colors.TEXT, message_str)
+    else:
+        print(colors.ERROR, 'Not supported multi-packet group messages')
 
 
 def screen_message(header, payload):
@@ -135,7 +161,7 @@ def handle_packet(payload):
         return
 
     if packet_type == packet_types['route_update']:
-        route_update(payload)
+        route_update(header, payload)
         return
 
     if packet_type == packet_types['full_table_request']:
@@ -147,7 +173,11 @@ def handle_packet(payload):
         return
 
     if packet_type == packet_types['send_request_identity']:
-        send_request_identity(payload, header)
+        send_request_identity(header, payload)
+        return
+    
+    if packet_type == packet_types['group_message']:
+        group_message(payload, header)
         return
 
     if packet_type == packet_types['screen_message']:

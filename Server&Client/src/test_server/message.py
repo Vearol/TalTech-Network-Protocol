@@ -1,12 +1,13 @@
 #! /usr/bin/python3
 
 import time
+import json
 from queue import Queue
 
 from global_config import *
 from global_data import GlobalData
 from packet import create_packet
-from files import generate_file_metadata
+from json_parser import generate_file_metadata, generate_identity_bytes
 from byte_parser import number_to_bytes
 from colors import colors
 
@@ -134,7 +135,8 @@ class Message:
             GlobalData.sequences.add_out(destination, session_id, size)
             sequence_number = GlobalData.sequences.get_out(destination, session_id)
         
-            packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload)
+            packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, 
+                                   session_id, sequence_number, payload)
 
             with GlobalData.lock:
                 GlobalData.sock.sendto(packet, (ip, port))
@@ -153,7 +155,8 @@ class Message:
             GlobalData.sequences.add_out(destination, session_id, PAYLOAD_BUFFER)
             sequence_number = GlobalData.sequences.get_out(destination, session_id)
 
-            packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload[range_from:range_to])
+            packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, 
+                                   session_id, sequence_number, payload[range_from:range_to])
 
             with GlobalData.lock:
                 GlobalData.sock.sendto(packet, (ip, port))
@@ -169,7 +172,8 @@ class Message:
         GlobalData.sequences.add_out(destination, session_id, size - data_sent)
         sequence_number = GlobalData.sequences.get_out(destination, session_id)
 
-        packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload[data_sent:])
+        packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, 
+                               session_id, sequence_number, payload[data_sent:])
 
         with GlobalData.lock:
             GlobalData.sock.sendto(packet, (ip, port))
@@ -209,7 +213,8 @@ class Message:
             GlobalData.sequences.add_out(destination, session_id, len(data))
             sequence_number = GlobalData.sequences.get_out(destination, session_id)
 
-            packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, data)
+            packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, 
+                                   session_id, sequence_number, data)
             
             with GlobalData.lock:
                 GlobalData.sock.sendto(packet, (ip, port))
@@ -244,7 +249,8 @@ class Message:
                 for packet in range(packets_count - 1):
                     data = payload[packet]
                     sequence_number += len(data)
-                    packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, data)
+                    packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, 
+                                           session_id, sequence_number, data)
 
                     with GlobalData.lock:
                         GlobalData.sock.sendto(packet, (ip, port))
@@ -254,21 +260,24 @@ class Message:
                 flag = flag_types['last_packet']
                 data = payload[packets_count - 1]
                 sequence_number += len(data)
-                packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, data)
+                packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, 
+                                       session_id, sequence_number, data)
 
                 with GlobalData.lock:
                     GlobalData.sock.sendto(packet, (ip, port))
             
                 return
             
-            payload = payload[0]
+            if (len(payload) > 0):
+                payload = payload[0]
 
         
         flag = flag_types['single_packet']
 
         sequence_number = GlobalData.sequences.get_out(destination, session_id)
         
-        packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, session_id, sequence_number, payload)
+        packet = create_packet(PROTOCOL_VERSION, packet_type, flag, SERVER_KEY, destination, 
+                               session_id, sequence_number, payload)
 
         with GlobalData.lock:
             GlobalData.sock.sendto(packet, (ip, port))
@@ -341,4 +350,33 @@ class Message:
 
         print(colors.LOG, 'Forwarding massage to', ip)
 
-        GlobalData.sock.sendto(message, (ip, port))
+        with GlobalData.lock:
+            GlobalData.sock.sendto(message, (ip, port))
+
+
+    # Fake ACK for group messages... TODO
+    @staticmethod
+    def send_fake_ACK(header):
+
+        ip, port = GlobalData.nodes.get_network_info(header.destination)
+
+        packet = create_packet(PROTOCOL_VERSION, header.packet_type, flag_types['ACK'], SERVER_KEY, header.destination, 
+                               header.session_id, header.sequence_number, bytes(0))
+
+        with GlobalData.lock:
+            GlobalData.sock.sendto(packet, (ip, port))
+
+    # send a copy of message with same packet type and payload to multiple users
+    @staticmethod
+    def send_message_to_group(packet_type, destination_array, payload):
+        
+        for destination in destination_array:
+            Message.send_message(packet_type, destination, payload)
+
+
+    @staticmethod
+    def send_identity_request(destination):
+
+        server_identity = generate_identity_bytes('true')
+
+        Message.send_message(packet_types['send_request_identity'], destination, server_identity)
