@@ -12,7 +12,7 @@ from colors import colors
 
 def keep_alive(header):
     
-    Message.send_ACK(header.packet_type, header.seqence_number, 0, header.source)
+    Message.send_ACK(header.packet_type, header.seqence_number, header.session_id, header.source)
 
 
 def route_update(payload):
@@ -45,7 +45,7 @@ def full_table_update(source, flag, payload):
     GlobalData.nodes.add_table_byte(payload_data)
 
 
-def send_request_identity(payload, header):
+def send_request_identity(header, payload):
     
     identity_data = json.load(payload.decode())
 
@@ -66,6 +66,18 @@ def send_request_identity(payload, header):
 
         GlobalData.messages.send_message(header.packet_type, header.source, server_data_bytes)
 
+
+def group_message(header, payload):
+    source = header.source
+
+    print(colors.INCOME, 'group message from', source)
+
+    if (header.flag == flag_types['single_packet']):
+        
+        message_str = payload.decode('utf-8')    
+        print('>', colors.TEXT, message_str)
+    else:
+        print(colors.ERROR, 'Not supported multi-packet group messages')
 
 
 def screen_message(header, payload):
@@ -147,7 +159,11 @@ def handle_packet(payload):
         return
 
     if packet_type == packet_types['send_request_identity']:
-        send_request_identity(payload, header)
+        send_request_identity(header, payload)
+        return
+    
+    if packet_type == packet_types['group_message']:
+        group_message(payload, header)
         return
 
     if packet_type == packet_types['screen_message']:

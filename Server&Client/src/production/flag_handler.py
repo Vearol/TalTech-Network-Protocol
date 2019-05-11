@@ -76,6 +76,11 @@ def handle_flag(payload):
 
     header = GlobalData.header
 
+    # group messages... TODO
+    if (header.packet_type == packet_types['group_message']):
+        Message.send_fake_ACK(header)
+        return
+
     # add incoming seqance number no matter what
     GlobalData.sequences.add_in(header.source, header.session_id, len(payload))
 
