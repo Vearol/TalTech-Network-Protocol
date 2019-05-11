@@ -22,10 +22,16 @@ class Nodes:
         for key, value in self.nodes_data.items():
             if value[2] == nickname:
                 return key
-        
+
         log = "Not able to find GPG key for nickname: " + nickname
         print(colors.ERROR, log)
         return None
+
+    def get_neighbors(self):
+        keys = []
+        for key in self.nodes_data.keys():
+            keys.append(key)
+        return keys
 
     def get_network_info(self, key):
         key = key.lower()
@@ -35,7 +41,6 @@ class Nodes:
             return (ip, port)
         else:
             return (None, None)
-
 
     def set_nickname(self, key, nickname):
         if key in self.nodes_data.keys():
