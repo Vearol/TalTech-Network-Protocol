@@ -19,6 +19,9 @@ from console import Console
 
 def listen():
     
+    neighbors = GlobalData.nodes.get_neighbors()
+    Message.send_message_to_group(packet_types['full_table_request'], neighbors, bytes(0))
+
     while True:
         # Receive bytes. 100 bytes in theory, can decrease later
         message_bytes, address_from = GlobalData.sock.recvfrom(100)

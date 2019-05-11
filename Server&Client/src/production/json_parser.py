@@ -4,7 +4,8 @@ import os
 import json
 
 from byte_parser import bytes_to_number
-from global_config import METADATA_HEADER, FILENAME_KEY, FILESIZE_KEY, FILETYPE_KEY
+from global_config import METADATA_HEADER, FILENAME_KEY, FILESIZE_KEY, FILETYPE_KEY, ID_KEY, RESPONCE_KEY, NAME_KEY, SERVER_KEY
+from global_data import GlobalData
 
 
 def generate_file_metadata(file_path):
@@ -40,4 +41,15 @@ def parse_file_metadata(payload):
     return ({}, 0)
 
 
+def generate_identity_bytes(response_required):
+    
+    server_name = GlobalData.nodes.get_nickname(SERVER_KEY)
+
+    server_data = {
+        ID_KEY : SERVER_KEY,
+        RESPONCE_KEY : response_required,
+        NAME_KEY : server_name
+    }
+
+    return json.dumps(server_data).encode()
 

@@ -1,12 +1,13 @@
 #! /usr/bin/python3
 
 import time
+import json
 from queue import Queue
 
 from global_config import *
 from global_data import GlobalData
 from packet import create_packet
-from files import generate_file_metadata
+from json_parser import generate_file_metadata, generate_identity_bytes
 from byte_parser import number_to_bytes
 from colors import colors
 
@@ -267,7 +268,8 @@ class Message:
             
                 return
             
-            payload = payload[0]
+            if (len(payload) > 0):
+                payload = payload[0]
 
         
         flag = flag_types['single_packet']
@@ -363,3 +365,18 @@ class Message:
 
         with GlobalData.lock:
             GlobalData.sock.sendto(packet, (ip, port))
+
+    # send a copy of message with same packet type and payload to multiple users
+    @staticmethod
+    def send_message_to_group(packet_type, destination_array, payload):
+        
+        for destination in destination_array:
+            Message.send_message(packet_type, destination, payload)
+
+
+    @staticmethod
+    def send_identity_request(destination):
+
+        server_identity = generate_identity_bytes('true')
+
+        Message.send_message(packet_types['send_request_identity'], destination, server_identity)
