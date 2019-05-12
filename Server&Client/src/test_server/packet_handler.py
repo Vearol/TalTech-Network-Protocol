@@ -12,7 +12,7 @@ from colors import colors
 
 def keep_alive(header):
     
-    Message.send_ACK(header.packet_type, header.seqence_number, header.session_id, header.source)
+    GlobalData.keepalives.update_user(header.source)
 
 
 def route_update(header, payload):
@@ -78,7 +78,7 @@ def send_request_identity(header, payload):
 
         server_identity = generate_identity_bytes('false')
 
-        GlobalData.messages.send_message(header.packet_type, header.source, server_identity)
+        Message.send_message(header.packet_type, header.source, server_identity)
 
 
 def group_message(header, payload):

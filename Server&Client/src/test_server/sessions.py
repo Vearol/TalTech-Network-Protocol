@@ -44,7 +44,7 @@ class UserSessions:
             self.user_sessions[user_id] = next_session
         else:
             self.user_sessions[user_id] = 1
-        
+
         return self.user_sessions[user_id]
     
 

@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 
-from global_config import INIT_NODES, SERVER_KEY
+from global_config import INIT_NODES, SERVER_KEY, MAX_ROUTE_COST
 from colors import colors
 from byte_parser import bytes_to_number, bytes_to_GPG
 
@@ -96,13 +96,12 @@ class Nodes:
         array = []
         table = {}
         table_key = ''
-        table_str = table_byte.decode()
-        for x in range(int(len(table_str) / 10)):
-            array.append(table_str[:10])
+        for x in range(int(len(table_byte) / 10)):
+            array.append(table_byte[:10])
         for a in array:
             key = bytes_to_GPG(a[:8])
             value = bytes_to_number(a[8:])
-            if value == 65535:
+            if value == MAX_ROUTE_COST:
                 continue
             table[key] = value + cost
             if value == 0:

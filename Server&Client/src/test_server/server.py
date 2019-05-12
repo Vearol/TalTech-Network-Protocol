@@ -11,10 +11,11 @@ from sessions import UserSessions
 from message import UserMessageACK, Message
 from sequences import UserMessageSN
 from nodes import Nodes
-from global_config import packet_types, SERVER_KEY, DEFAULT_SERVER_IP, DEFAULT_SERVER_PORT, HEADER_BUFFER
+from global_config import packet_types, SERVER_KEY, DEFAULT_SERVER_IP, DEFAULT_SERVER_PORT, HEADER_BUFFER, KEEPALIVE_TIMER
 from colors import colors
 from global_data import GlobalData
 from console import Console
+from keepalive import Keepalive
 
 
 def listen():
@@ -60,6 +61,13 @@ def handle_input():
     console.start()
 
 
+def keepalive():
+    while True:
+        GlobalData.keepalives.send()
+        GlobalData.keepalives.update_online_users_status()
+        time.sleep(KEEPALIVE_TIMER)
+
+
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind((DEFAULT_SERVER_IP, DEFAULT_SERVER_PORT))
 print(colors.SERVER, 'Listening socket:',DEFAULT_SERVER_IP, ':', DEFAULT_SERVER_PORT)
@@ -69,11 +77,15 @@ sessions = UserSessions()
 messages = UserMessageACK()
 sequences = UserMessageSN()
 nodes = Nodes()
+keepalives = Keepalive(nodes)
 
-GlobalData.set_data(sock, sequences, sessions, messages, nodes, header_parser)
+GlobalData.set_data(sock, sequences, sessions, messages, nodes, header_parser, keepalives)
 
 listen_thread = Thread(target=listen)
 listen_thread.start()
 
 input_thread = Thread(target=handle_input)
 input_thread.start()
+
+keepalive_thread = Thread(target=keepalive)
+keepalive_thread.start()
