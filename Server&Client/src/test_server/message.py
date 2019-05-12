@@ -296,7 +296,14 @@ class Message:
 
     # ACK message
     @staticmethod
-    def send_ACK(packet_type, session_id, sequence_number, destination):
+    def send_ACK():
+
+        header = GlobalData.header
+        
+        session_id = header.session_id
+        destination = header.source
+        sequence_number = header.sequence_number
+        packet_type = header.packet_type
 
         local_session_id = GlobalData.sessions.get_income_session(destination)
         local_sequence_number = GlobalData.sequences.get_in(destination, local_session_id)
@@ -326,7 +333,7 @@ class Message:
             return
 
         packet = create_packet(PROTOCOL_VERSION, packet_type, flag_types['ACK'], SERVER_KEY, destination, 
-                               session_id, sequence_number, bytes(0))
+                               local_session_id, local_sequence_number, bytes(0))
         log = 'Sending ACK of missed session ' + str(session_id) + ', seq.num: ' + str(sequence_number) + ' to ' + destination
         print(colors.LOG, log)
             
@@ -335,7 +342,7 @@ class Message:
 
         if (local_session_id != session_id):
             packet = create_packet(PROTOCOL_VERSION, packet_type, flag_types['NOT_ACK'], SERVER_KEY, destination, 
-                                   0, 0, bytes(0))
+                                   session_id, sequence_number, bytes(0))
             print(colors.LOG, 'Sending NOT_ACK to', destination)
             
             with GlobalData.lock:
@@ -356,7 +363,9 @@ class Message:
 
     # Fake ACK for group messages... TODO
     @staticmethod
-    def send_fake_ACK(header):
+    def send_fake_ACK():
+
+        header = GlobalData.header
 
         ip, port = GlobalData.nodes.get_network_info(header.destination)
 

@@ -21,14 +21,14 @@ def normal(header, payload):
     skip = skip_index(payload, header.packet_type)
     GlobalData.sessions.add(header.source, payload[skip:])
 
-    Message.send_ACK(header.packet_type, header.session_id, header.sequence_number, header.source)
+    Message.send_ACK()
 
 
 def first_packet(header, payload):
    
     GlobalData.sessions.add(header.source, payload)
 
-    Message.send_ACK(header.packet_type, header.session_id, header.sequence_number, header.source)
+    Message.send_ACK()
 
 
 def last_packet(header, payload):
@@ -36,16 +36,22 @@ def last_packet(header, payload):
     skip = skip_index(payload, header.packet_type)
     GlobalData.sessions.add(header.source, payload[skip:])
 
-    Message.send_ACK(header.packet_type, header.session_id, header.sequence_number, header.source)
+    Message.send_ACK()
 
 
 def single_packet(header):
    
-    Message.send_ACK(header.packet_type, header.session_id, header.sequence_number, header.source)
+    Message.send_ACK()
 
 
 def ACK(header):
     
+    # keepalive ACK
+    if (header.packet_type == packet_types['keepalive']):
+        GlobalData.keepalives.update_user(header.source)
+        # skip rest, we don't want to spam with logs
+        return
+
     print(colors.LOG, 'Received ACK from', header.source)
     GlobalData.messages.remove(header.source, header.session_id)
     
@@ -67,9 +73,10 @@ def NOT_ACK(header):
         Message.resend_pending_messages(header.source)
 
 
-def error():
-    pass
-    # do something
+def error(header, payload):
+
+    log = 'Error message from ' + str(header.source) + ": " + payload.decode()
+    print(colors.ERROR, log)
 
 
 def handle_flag(payload):
@@ -78,7 +85,7 @@ def handle_flag(payload):
 
     # group messages... TODO
     if (header.packet_type == packet_types['group_message']):
-        Message.send_fake_ACK(header)
+        Message.send_fake_ACK()
         return
 
     # add incoming seqance number no matter what
@@ -115,6 +122,6 @@ def handle_flag(payload):
         return False
 
     if flag == flag_types['error']:
-        error()
+        error(header, payload)
         return False
 
