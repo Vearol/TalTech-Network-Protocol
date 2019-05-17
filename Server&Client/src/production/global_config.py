@@ -1,12 +1,21 @@
 #! /usr/bin/python3
 
-SERVER_KEY = 'f0dc905f05793a3c'
+import yaml
+from socket import gethostname
+
+
+yaml_name = gethostname() + '.yaml'
+conf = './config/' + yaml_name
+yml = open(conf)
+data =yaml.load(yml)
+
+SERVER_KEY = data['server_key']
 PROTOCOL_VERSION = 0
 
 DEFAULT_DESTINATION = 'AC3C905F1239362C'
 
-DEFAULT_SERVER_IP = '127.0.0.1'
-DEFAULT_SERVER_PORT = 8080
+DEFAULT_SERVER_IP = data['server_ip']
+DEFAULT_SERVER_PORT = data['server_port']
 
 DEFAULT_DEST_IP = '127.0.0.1'
 DEFAULT_DEST_PORT = 8088

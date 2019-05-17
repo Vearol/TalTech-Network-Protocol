@@ -20,7 +20,7 @@ class Nodes:
         conf = './config/' + yaml_name
         with open(conf) as yml:
             data = yaml.load(yml)
-            return data
+            return data['neighbors']
 
     def set_network_info(self, key, ip, port):
         if key not in self.nodes_data.keys():
