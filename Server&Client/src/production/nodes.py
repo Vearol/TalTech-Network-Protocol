@@ -3,8 +3,6 @@
 from global_config import INIT_NODES, SERVER_KEY, MAX_ROUTE_COST
 from colors import colors
 from byte_parser import bytes_to_number, bytes_to_GPG
-from socket import gethostname
-import yaml
 
 
 class Nodes:
@@ -13,14 +11,7 @@ class Nodes:
         self.host_id = host_id
         self.tables = [{host_id: {host_id: 0}}]
         self.nodes_data = INIT_NODES
-        self.nicknames = self.load_config()
-
-    def load_config(self):
-        yaml_name = gethostname() + '.yaml'
-        conf = './config/' + yaml_name
-        with open(conf) as yml:
-            data = yaml.load(yml)
-            return data
+        self.nicknames = {}
 
     def set_network_info(self, key, ip, port):
         if key not in self.nodes_data.keys():
